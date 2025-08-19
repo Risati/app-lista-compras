@@ -1,0 +1,26 @@
+name: lista_elegante
+description: Uma aplicação Flutter elegante para gerenciar sua lista de compras.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  google_fonts: ^5.0.0
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+  hive_generator: ^1.1.0
+  build_runner: ^2.3.3
+
+flutter:
+  uses-material-design: true
