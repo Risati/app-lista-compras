@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 import 'list_tab.dart' show ListTab;
-import 'cart_tab.dart' show CartTab;
+import 'cart_tab.dart' show CartPage;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -24,7 +23,7 @@ class HomeScreen extends StatelessWidget {
         body: const TabBarView(
           children: [
             ListTab(),
-            CartTab(),
+            CartPage(),
           ],
         ),
       ),
