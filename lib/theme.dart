@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color primaryColor   = Color(0xFF00ACC1);
-const Color secondaryColor = Color(0xFFFF7043);
-const Color bgColor        = Color(0xFFF1F8E9);
-const Color surfaceColor   = Colors.white;
+const Color primaryColor   = Color(0xFF1A73E8); // azul petróleo
+const Color secondaryColor = Color(0xFFFF6F61); // coral suave
+const Color bgColor        = Color(0xFFF5F5F5); // cinza claro
+const Color surfaceColor   = Color(0xFFFFFFFF); // branco suave
 
 final ThemeData elegantTheme = ThemeData(
   useMaterial3: true,
