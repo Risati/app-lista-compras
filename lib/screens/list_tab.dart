@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/shopping_provider.dart';
-import '../theme.dart';  // necessário para acessar primaryColor
 
 class ListTab extends StatelessWidget {
   const ListTab({super.key}); // ✅ já está const
@@ -43,7 +42,7 @@ class ListTab extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .titleLarge
-                        ?.copyWith(color: primaryColor),
+                        ?.copyWith(color: Colors.blue),
                   ),
                 ),
                 for (var item in entry.value)
@@ -53,7 +52,7 @@ class ListTab extends StatelessWidget {
                       subtitle: Text('Qtd: ${item.quantity}'),
                       onTap: () {
                         prov.togglePurchased(item);
-                        DefaultTabController.of(context)?.animateTo(1);
+                        DefaultTabController.of(context).animateTo(1);
                       },
                     ),
                   ),
@@ -67,7 +66,7 @@ class ListTab extends StatelessWidget {
 }
 
 class _QuickAddBar extends StatefulWidget {
-  const _QuickAddBar({super.key}); // ✅ também const
+  const _QuickAddBar(); // ✅ também const
 
   @override
   State<_QuickAddBar> createState() => _QuickAddBarState();
