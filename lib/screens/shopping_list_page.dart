@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../theme.dart';
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
+import 'barcode_scanner_page.dart';
 
 class ShoppingListPage extends StatefulWidget {
   const ShoppingListPage({super.key});
@@ -53,6 +53,14 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   ],
                 ),
               ),
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            tooltip: 'Escanear',
+            heroTag: 'scan_fab',
+            child: const Icon(Icons.qr_code_scanner),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BarcodeScannerPage()),
             ),
           ),
           body: Column(
