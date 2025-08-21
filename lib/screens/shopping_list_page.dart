@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/shopping_list_model.dart';
@@ -18,6 +19,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   String _searchQuery = '';
   bool _showSearch = false;
   final _searchCtrl = TextEditingController();
+  final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +101,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     ),
                     const Spacer(),
                     Text(
-                      'Orçamento: R\$${model.budget.toStringAsFixed(2)}',
+                      'Orçamento: ${currency.format(model.budget)}',
                       style: const TextStyle(color: Colors.white),
                     ),
                     const SizedBox(width: 8),
@@ -113,7 +115,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            tooltip: 'Escanear',
+            tooltip: 'Escanear código de barras',
             heroTag: 'scan_fab',
             child: const Icon(Icons.qr_code_scanner),
             onPressed: () => Navigator.of(context).push(
@@ -312,11 +314,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                                             children: [
                                               Text('Qtd: ${item.quantity}'),
                                               const SizedBox(width: 8),
-                                              Text(
-                                                  'R\$ ${item.price.toStringAsFixed(2)}'),
+                                              Text(currency.format(item.price)),
                                               const SizedBox(width: 8),
-                                              Text(
-                                                  'R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
+                                              Text(currency.format(
+                                                  item.quantity * item.price)),
                                               const SizedBox(width: 4),
                                               const Icon(Icons.edit,
                                                   size: 16, color: Colors.grey),
@@ -470,7 +471,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           controller: ctrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}$')),
+            FilteringTextInputFormatter.allow(RegExp(r'^\d+[.,]?\d{0,2}$')),
           ],
           decoration: const InputDecoration(labelText: 'Valor (R\$)'),
         ),
@@ -480,7 +481,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final v = double.tryParse(ctrl.text) ?? 0.0;
+              final v = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
               model.updateBudget(v);
               Navigator.of(context).pop();
             },
