@@ -3,7 +3,7 @@ import 'list_tab.dart' show ListTab;
 import 'cart_tab.dart' show CartPage;
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

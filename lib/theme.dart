@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color primaryColor   = Color(0xFF1A73E8); // azul petróleo
+const Color primaryColor = Color(0xFF1A73E8); // azul petróleo
 const Color secondaryColor = Color(0xFFFF6F61); // coral suave
-const Color bgColor        = Color(0xFFF5F5F5); // cinza claro
-const Color surfaceColor   = Color(0xFFFFFFFF); // branco suave
+const Color bgColor = Color(0xFFF5F5F5); // cinza claro
+const Color surfaceColor = Color(0xFFFFFFFF); // branco suave
 
 final ThemeData elegantTheme = ThemeData(
   useMaterial3: true,
-  colorScheme: ColorScheme.light(
+  colorScheme: const ColorScheme.light(
     primary: primaryColor,
     secondary: secondaryColor,
-    background: bgColor,
     surface: surfaceColor,
-    onBackground: Colors.black87,
+    onSurface: Colors.black87,
   ),
   scaffoldBackgroundColor: bgColor,
   appBarTheme: AppBarTheme(
     backgroundColor: primaryColor,
     elevation: 0,
     titleTextStyle: GoogleFonts.poppins(
-      fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white
-    ),
+        fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
     centerTitle: true,
   ),
   inputDecorationTheme: InputDecorationTheme(
@@ -35,7 +33,7 @@ final ThemeData elegantTheme = ThemeData(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: secondaryColor),
+      borderSide: const BorderSide(color: secondaryColor),
     ),
   ),
   textTheme: GoogleFonts.poppinsTextTheme(),

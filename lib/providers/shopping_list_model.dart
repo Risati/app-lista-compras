@@ -19,14 +19,11 @@ class ShoppingListModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<GroceryItem> get available =>
-      items.where((i) => !i.purchased).toList();
+  List<GroceryItem> get available => items.where((i) => !i.purchased).toList();
 
-  List<GroceryItem> get cart =>
-      items.where((i) => i.purchased).toList();
+  List<GroceryItem> get cart => items.where((i) => i.purchased).toList();
 
-  double get total =>
-      cart.fold(0.0, (sum, i) => sum + i.price * i.quantity);
+  double get total => cart.fold(0.0, (sum, i) => sum + i.price * i.quantity);
 
   double get remaining => budget - total;
 
@@ -50,9 +47,9 @@ class ShoppingListModel extends ChangeNotifier {
     int? qty,
     double? price,
   }) {
-    if (name   != null) item.name     = name;
-    if (qty    != null) item.quantity = qty;
-    if (price  != null) item.price    = price;
+    if (name != null) item.name = name;
+    if (qty != null) item.quantity = qty;
+    if (price != null) item.price = price;
     item.save();
     notifyListeners();
   }
@@ -76,13 +73,15 @@ class ShoppingListModel extends ChangeNotifier {
     _sort();
     notifyListeners();
   }
+
   void remove(GroceryItem item) {
-      items.remove(item);
-      item.delete(); // Remove do Hive também
-      notifyListeners();
-    }
+    items.remove(item);
+    item.delete(); // Remove do Hive também
+    notifyListeners();
+  }
+
   void _sort() {
-    items.sort((a, b) =>
-        isAsc ? a.name.compareTo(b.name) : b.name.compareTo(a.name));
+    items.sort(
+        (a, b) => isAsc ? a.name.compareTo(b.name) : b.name.compareTo(a.name));
   }
 }

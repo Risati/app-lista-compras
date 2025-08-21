@@ -5,10 +5,10 @@ import '../services/barcode_service.dart';
 import '../providers/shopping_list_model.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
-  const BarcodeScannerPage({Key? key}) : super(key: key);
+  const BarcodeScannerPage({super.key});
 
   @override
-State<BarcodeScannerPage> createState() => _BarcodeScannerPageState();
+  State<BarcodeScannerPage> createState() => _BarcodeScannerPageState();
 }
 
 class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
@@ -21,7 +21,17 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     final product = await BarcodeService.fetchProduct(code);
     if (!mounted) return; // <-- evita uso de BuildContext inválido
 
-    final name = product?.name ?? product?.brand ?? code;
+    // Adicionando o nome do produto + marca
+    // E.g. Creme de Leite Leve UHT - Mococa
+    String name = code;
+    if (product != null) {
+      if (product.name != null && product.brand != null) {
+        name = '${product.name} - ${product.brand}';
+      } else {
+        name = product.name ?? product.brand ?? code;
+      }
+    }
+
     Provider.of<ShoppingListModel>(context, listen: false).addQuick(name, 1);
 
     ScaffoldMessenger.of(context).showSnackBar(
