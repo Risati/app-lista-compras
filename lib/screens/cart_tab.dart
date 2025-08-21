@@ -27,8 +27,7 @@ class CartPage extends StatelessWidget {
                   _buildRow(
                     'Restante:',
                     model.remaining,
-                    valueColor:
-                        model.remaining < 0 ? Colors.red : Colors.green,
+                    valueColor: model.remaining < 0 ? Colors.red : Colors.green,
                   ),
                 ],
               ),
@@ -39,8 +38,7 @@ class CartPage extends StatelessWidget {
                   : ListView.separated(
                       padding: const EdgeInsets.all(8),
                       itemCount: model.cart.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 4),
+                      separatorBuilder: (_, __) => const SizedBox(height: 4),
                       itemBuilder: (_, i) {
                         final item = model.cart[i];
                         return Card(
@@ -51,8 +49,7 @@ class CartPage extends StatelessWidget {
                             trailing: IconButton(
                               icon: const Icon(
                                   Icons.remove_shopping_cart_rounded),
-                              onPressed: () =>
-                                  model.togglePurchased(item),
+                              onPressed: () => model.togglePurchased(item),
                             ),
                           ),
                         );
@@ -65,8 +62,7 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, double value,
-      {Color? valueColor}) {
+  Widget _buildRow(String label, double value, {Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

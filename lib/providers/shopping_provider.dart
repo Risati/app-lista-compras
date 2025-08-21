@@ -4,15 +4,15 @@ import '../models/item.dart';
 import '../services/ai_service.dart';
 
 class ShoppingProvider extends ChangeNotifier {
-  static const _boxName    = 'items';
-  static const _budgetKey  = 'budget';
+  static const _boxName = 'items';
+  static const _budgetKey = 'budget';
 
   late Box<Item> _box;
   late Box _settingsBox;
 
   List<Item> _items = [];
-  double budget      = 0.0;
-  bool _ascending    = true;
+  double budget = 0.0;
+  bool _ascending = true;
 
   ShoppingProvider() {
     _init();
@@ -36,11 +36,9 @@ class ShoppingProvider extends ChangeNotifier {
     }
   }
 
-  List<Item> get availableItems =>
-      _sorted(_items.where((i) => !i.purchased));
+  List<Item> get availableItems => _sorted(_items.where((i) => !i.purchased));
 
-  List<Item> get cartItems =>
-      _sorted(_items.where((i) => i.purchased));
+  List<Item> get cartItems => _sorted(_items.where((i) => i.purchased));
 
   double get totalCost =>
       cartItems.fold(0.0, (sum, i) => sum + i.price * i.quantity);
@@ -83,13 +81,9 @@ class ShoppingProvider extends ChangeNotifier {
   List<Item> _sorted(Iterable<Item> items) {
     final list = items.toList();
     list.sort((a, b) {
-      final cmp = a.category
-          .toLowerCase()
-          .compareTo(b.category.toLowerCase());
+      final cmp = a.category.toLowerCase().compareTo(b.category.toLowerCase());
       if (cmp != 0) return _ascending ? cmp : -cmp;
-      return _ascending
-          ? a.name.compareTo(b.name)
-          : b.name.compareTo(a.name);
+      return _ascending ? a.name.compareTo(b.name) : b.name.compareTo(a.name);
     });
     return list;
   }
