@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../providers/shopping_list_model.dart';
 
@@ -7,6 +8,7 @@ class CartPage extends StatelessWidget {
   const CartPage({super.key});
   @override
   Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     return Consumer<ShoppingListModel>(
       builder: (_, model, __) => Scaffold(
         appBar: AppBar(
@@ -20,14 +22,15 @@ class CartPage extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildRow('Total gasto:', model.total),
+                  _buildRow('Total gasto:', model.total, currency: currency),
                   const SizedBox(height: 8),
-                  _buildRow('Orçamento:', model.budget),
+                  _buildRow('Orçamento:', model.budget, currency: currency),
                   const SizedBox(height: 8),
                   _buildRow(
                     'Restante:',
                     model.remaining,
                     valueColor: model.remaining < 0 ? Colors.red : Colors.green,
+                    currency: currency,
                   ),
                 ],
               ),
@@ -45,10 +48,9 @@ class CartPage extends StatelessWidget {
                           child: ListTile(
                             title: Text(item.name),
                             subtitle: Text(
-                                'Qtd: ${item.quantity} • R\$${item.price.toStringAsFixed(2)}'),
+                                'Qtd: ${item.quantity} • ${currency.format(item.price)}'),
                             trailing: IconButton(
-                              icon: const Icon(
-                                  Icons.remove_shopping_cart_rounded),
+                              icon: const Icon(Icons.remove_shopping_cart_rounded),
                               onPressed: () => model.togglePurchased(item),
                             ),
                           ),
@@ -62,13 +64,14 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, double value, {Color? valueColor}) {
+  Widget _buildRow(String label, double value,
+      {Color? valueColor, required NumberFormat currency}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label),
         Text(
-          'R\$${value.toStringAsFixed(2)}',
+          currency.format(value),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: valueColor ?? Colors.black87,
