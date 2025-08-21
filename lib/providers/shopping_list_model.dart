@@ -76,7 +76,11 @@ class ShoppingListModel extends ChangeNotifier {
     _sort();
     notifyListeners();
   }
-
+  void remove(GroceryItem item) {
+      items.remove(item);
+      item.delete(); // Remove do Hive também
+      notifyListeners();
+    }
   void _sort() {
     items.sort((a, b) =>
         isAsc ? a.name.compareTo(b.name) : b.name.compareTo(a.name));
