@@ -16,10 +16,18 @@ class GroceryItem extends HiveObject {
   @HiveField(3)
   bool purchased;
 
+  @HiveField(4)
+  String? category;
+
+  @HiveField(5)
+  bool isFavorite; // Novo campo
+
   GroceryItem({
     required this.name,
     required this.quantity,
     this.price = 0.0,
     this.purchased = false,
+    this.category,
+    this.isFavorite = false, // Inicializa como não favorito
   });
 }

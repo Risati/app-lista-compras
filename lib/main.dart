@@ -7,18 +7,29 @@ import 'models/grocery_item.dart';
 import 'providers/shopping_list_model.dart';
 import 'screens/shopping_list_page.dart';
 import 'screens/cart_tab.dart';
+import 'screens/favorites_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa Hive
   await Hive.initFlutter();
 
+  // Registra o adapter antes de abrir a box
   Hive.registerAdapter(GroceryItemAdapter());
+
+  // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
   await Hive.openBox('settings');
+  await Hive.openBox<GroceryItem>('favorites_box');
+
+  // Inicializa o modelo e garante que as boxes estejam carregadas
+  final shoppingListModel = ShoppingListModel();
+  await shoppingListModel.init();
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => ShoppingListModel()..loadData(),
+      create: (_) => shoppingListModel,
       child: const MyApp(),
     ),
   );
@@ -26,6 +37,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,15 +51,18 @@ class MyApp extends StatelessWidget {
 
 class AppTabs extends StatefulWidget {
   const AppTabs({super.key});
+
   @override
   State<AppTabs> createState() => _AppTabsState();
 }
 
 class _AppTabsState extends State<AppTabs> {
   int _currentIndex = 0;
-  static const _pages = [
+
+  static final _pages = [
     ShoppingListPage(),
     CartPage(),
+    FavoritesPage(),
   ];
 
   @override
@@ -68,6 +83,10 @@ class _AppTabsState extends State<AppTabs> {
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag_rounded),
             label: 'Carrinho',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Favoritos',
           ),
         ],
       ),

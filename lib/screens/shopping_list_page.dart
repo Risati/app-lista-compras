@@ -143,7 +143,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         ),
                       ),
                     IconButton(
-                      icon: Icon(_showSearch ? Icons.close : Icons.search),
+                      icon: Icon(_showSearch ? Icons.close : Icons.search, color: Colors.white),
                       onPressed: () {
                         setState(() {
                           if (_showSearch) {
@@ -331,6 +331,15 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            IconButton(
+                              icon: Icon(
+                                item.isFavorite ? Icons.star : Icons.star_border,
+                                color: item.isFavorite ? Colors.amber : Colors.grey,
+                              ),
+                              onPressed: () {
+                                Provider.of<ShoppingListModel>(context, listen: false).toggleFavorite(item);
+                              },
+                            ),
                             IconButton(
                               icon: const Icon(Icons.edit, size: 20),
                               onPressed: () => _showEditItemDialog(context, model, item),
