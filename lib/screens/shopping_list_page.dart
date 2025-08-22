@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/shopping_list_model.dart';
@@ -18,6 +19,82 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   String _searchQuery = '';
   bool _showSearch = false;
   final _searchCtrl = TextEditingController();
+  final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+
+  // Formatter que formata enquanto digita (1 -> R$ 0,01 ; 1050 -> R$ 10,50)
+  final TextInputFormatter currencyFormatter =
+      TextInputFormatter.withFunction((oldValue, newValue) {
+    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return const TextEditingValue(text: '');
+    final value = int.parse(digits);
+    final formatted = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
+        .format(value / 100);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  });
+
+  void _showEditItemDialog(
+      BuildContext context, ShoppingListModel model, GroceryItem item) {
+    final qtyCtrl = TextEditingController(text: item.quantity.toString());
+    final priceCtrl = TextEditingController(text: currency.format(item.price));
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Editar item'),
+        content: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: qtyCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade',
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [currencyFormatter],
+                  decoration: const InputDecoration(
+                    labelText: 'Preço',
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () {
+              final q = int.tryParse(qtyCtrl.text) ?? item.quantity;
+              final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final p = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+              model.updateItem(item, qty: q, price: p);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +176,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     ),
                     const Spacer(),
                     Text(
-                      'Orçamento: R\$${model.budget.toStringAsFixed(2)}',
+                      'Orçamento: ${currency.format(model.budget)}',
                       style: const TextStyle(color: Colors.white),
                     ),
                     const SizedBox(width: 8),
@@ -113,7 +190,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            tooltip: 'Escanear',
+            tooltip: 'Escanear código de barras',
             heroTag: 'scan_fab',
             child: const Icon(Icons.qr_code_scanner),
             onPressed: () => Navigator.of(context).push(
@@ -141,7 +218,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'R\$ ${total.toStringAsFixed(2)}',
+                            currency.format(total),
                             style: const TextStyle(fontSize: 16),
                           ),
                         ],
@@ -153,7 +230,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           const Text('Gasto',
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           Text(
-                            'R\$ ${totalGasto.toStringAsFixed(2)}',
+                            currency.format(totalGasto),
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.green[700],
@@ -191,16 +268,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       flex: 5,
                       child: TextField(
                         controller: _nameCtrl,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Produto',
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
                         ),
                         onSubmitted: (_) => _add(model),
                       ),
@@ -210,21 +279,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       width: 60,
                       child: TextField(
                         controller: _qtyCtrl,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Qtd',
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 8),
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onSubmitted: (_) => _add(model),
                       ),
                     ),
@@ -233,16 +292,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       width: 48,
                       height: 48,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                        ),
                         onPressed: () => _add(model),
-                        child: const Icon(Icons.add,
-                            color: Colors.white, size: 24),
+                        child: const Icon(Icons.add, color: Colors.white, size: 24),
                       ),
                     ),
                   ],
@@ -255,181 +306,53 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   separatorBuilder: (_, __) => const SizedBox(height: 4),
                   itemBuilder: (_, i) {
                     final item = filtered[i];
-                    final qtyCtrl =
-                        TextEditingController(text: item.quantity.toString());
-                    final priceCtrl = TextEditingController(
-                        text: item.price.toStringAsFixed(2));
-                    bool editing = false;
-
-                    return StatefulBuilder(
-                      builder: (context, setState) {
-                        return Card(
-                          color:
-                              item.purchased ? Colors.green[50] : Colors.white,
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            leading: Checkbox(
-                              value: item.purchased,
-                              onChanged: (_) => model.togglePurchased(item),
-                              activeColor: Colors.green,
+                    return Card(
+                      child: ListTile(
+                        visualDensity: const VisualDensity(vertical: -4),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        title: GestureDetector(
+                          onTap: () => _showEditNameDialog(context, model, item),
+                          child: Text(item.name),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Text('Qtd: ${item.quantity}'),
+                            const SizedBox(width: 12),
+                            Text(currency.format(item.price)),
+                            const SizedBox(width: 12),
+                            Text(currency.format(item.quantity * item.price)),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () => _showEditItemDialog(context, model, item),
                             ),
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () =>
-                                      _showEditNameDialog(context, model, item),
-                                  child: Text(
-                                    item.name,
-                                    style: TextStyle(
-                                      decoration: item.purchased
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                      color: item.purchased
-                                          ? Colors.grey
-                                          : Colors.black,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                !editing
-                                    ? GestureDetector(
-                                        onTap: () =>
-                                            setState(() => editing = true),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[200],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text('Qtd: ${item.quantity}'),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                  'R\$ ${item.price.toStringAsFixed(2)}'),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                  'R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
-                                              const SizedBox(width: 4),
-                                              const Icon(Icons.edit,
-                                                  size: 16, color: Colors.grey),
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            width: 50,
-                                            child: TextField(
-                                              controller: qtyCtrl,
-                                              autofocus: true,
-                                              decoration: const InputDecoration(
-                                                isDense: true,
-                                                contentPadding:
-                                                    EdgeInsets.all(8),
-                                                border: OutlineInputBorder(),
-                                                labelText: 'Qtd',
-                                              ),
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly
-                                              ],
-                                              onSubmitted: (val) {
-                                                final q = int.tryParse(val) ??
-                                                    item.quantity;
-                                                model.updateItem(item, qty: q);
-                                                setState(() => editing = false);
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          SizedBox(
-                                            width: 80,
-                                            child: TextField(
-                                              controller: priceCtrl,
-                                              decoration: const InputDecoration(
-                                                isDense: true,
-                                                contentPadding:
-                                                    EdgeInsets.all(8),
-                                                border: OutlineInputBorder(),
-                                                labelText: 'R\$',
-                                              ),
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                  decimal: true),
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .allow(RegExp(
-                                                        r'^\d+\.?\d{0,2}$')),
-                                              ],
-                                              onSubmitted: (val) {
-                                                final p = double.tryParse(
-                                                        val.replaceAll(
-                                                            ',', '.')) ??
-                                                    item.price;
-                                                model.updateItem(item,
-                                                    price: p);
-                                                setState(() => editing = false);
-                                              },
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.check,
-                                                color: Colors.green),
-                                            onPressed: () {
-                                              final q =
-                                                  int.tryParse(qtyCtrl.text) ??
-                                                      item.quantity;
-                                              final p = double.tryParse(
-                                                      priceCtrl.text.replaceAll(
-                                                          ',', '.')) ??
-                                                  item.price;
-                                              model.updateItem(item,
-                                                  qty: q, price: p);
-                                              setState(() => editing = false);
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.close,
-                                                color: Colors.red),
-                                            onPressed: () =>
-                                                setState(() => editing = false),
-                                          ),
-                                        ],
-                                      ),
-                              ],
+                            IconButton(
+                              icon: const Icon(Icons.add_shopping_cart_outlined),
+                              onPressed: () => model.togglePurchased(item),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  color: Colors.redAccent),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                               onPressed: () async {
                                 final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     title: const Text('Remover item'),
-                                    content: Text(
-                                        'Deseja remover "${item.name}" da lista?'),
+                                    content: Text('Deseja remover "${item.name}" da lista?'),
                                     actions: [
                                       TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
+                                          onPressed: () => Navigator.pop(context, false),
                                           child: const Text('Cancelar')),
                                       TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
+                                          onPressed: () => Navigator.pop(context, true),
                                           child: const Text('Remover')),
                                     ],
                                   ),
@@ -437,9 +360,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                                 if (confirm == true) model.remove(item);
                               },
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -461,26 +384,22 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   void _showBudgetDialog(BuildContext context, ShoppingListModel model) {
-    final ctrl = TextEditingController(text: model.budget.toStringAsFixed(2));
+    final ctrl = TextEditingController(text: currency.format(model.budget));
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Ajustar Orçamento'),
         content: TextField(
           controller: ctrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}$')),
-          ],
-          decoration: const InputDecoration(labelText: 'Valor (R\$)'),
+          keyboardType: TextInputType.number,
+          inputFormatters: [currencyFormatter],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final v = double.tryParse(ctrl.text) ?? 0.0;
+              final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final v = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
               model.updateBudget(v);
               Navigator.of(context).pop();
             },
@@ -503,9 +422,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           decoration: const InputDecoration(labelText: 'Nome'),
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               final newName = ctrl.text.trim();
