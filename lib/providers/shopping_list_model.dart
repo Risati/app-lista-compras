@@ -36,8 +36,7 @@ class ShoppingListModel extends ChangeNotifier {
   // --------------------
   // Getters seguros
   // --------------------
-  List<GroceryItem> get available =>
-      items.where((i) => !i.purchased).toList();
+  List<GroceryItem> get available => items.where((i) => !i.purchased).toList();
 
   List<GroceryItem> get cart => items.where((i) => i.purchased).toList();
 
@@ -85,12 +84,12 @@ class ShoppingListModel extends ChangeNotifier {
   }
 
   void clearCart() {
-  for (var i in cart) {
-    items.remove(i);
-    i.delete(); // Remove do Hive
+    for (var i in cart) {
+      items.remove(i);
+      i.delete(); // Remove do Hive
+    }
+    notifyListeners();
   }
-  notifyListeners();
-}
 
   void toggleSort() {
     isAsc = !isAsc;

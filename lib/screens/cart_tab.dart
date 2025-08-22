@@ -65,7 +65,8 @@ class CartPage extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove_shopping_cart_rounded),
+                                  icon: const Icon(
+                                      Icons.remove_shopping_cart_rounded),
                                   tooltip: 'Retirar do carrinho',
                                   onPressed: () => model.togglePurchased(item),
                                 ),
@@ -75,7 +76,9 @@ class CartPage extends StatelessWidget {
                                   onPressed: () {
                                     model.remove(item);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Item removido do carrinho!')),
+                                      const SnackBar(
+                                          content: Text(
+                                              'Item removido do carrinho!')),
                                     );
                                   },
                                 ),

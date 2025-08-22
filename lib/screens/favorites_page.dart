@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/shopping_list_model.dart';
-import '../models/grocery_item.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -13,8 +12,8 @@ class FavoritesPage extends StatelessWidget {
 
     if (favorites.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text('Favoritos')),
-        body: Center(child: Text('Nenhum favorito ainda.')),
+        appBar: AppBar(title: const Text('Favoritos')),
+        body: const Center(child: Text('Nenhum favorito ainda.')),
       );
     }
 
@@ -31,13 +30,13 @@ class FavoritesPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.star, color: Colors.amber),
+                  icon: const Icon(Icons.star, color: Colors.amber),
                   onPressed: () {
                     model.toggleFavorite(item);
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: () {
                     Provider.of<ShoppingListModel>(context, listen: false)
                         .addFavoriteToList(item);

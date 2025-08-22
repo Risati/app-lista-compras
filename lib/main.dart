@@ -60,9 +60,9 @@ class _AppTabsState extends State<AppTabs> {
   int _currentIndex = 0;
 
   static final _pages = [
-    ShoppingListPage(),
-    CartPage(),
-    FavoritesPage(),
+    const ShoppingListPage(),
+    const CartPage(),
+    const FavoritesPage(),
   ];
 
   @override
