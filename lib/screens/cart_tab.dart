@@ -15,6 +15,18 @@ class CartPage extends StatelessWidget {
           title: const Text('Lembra AÍ'),
           centerTitle: true,
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_sweep, color: Colors.white),
+              tooltip: 'Limpar carrinho',
+              onPressed: () {
+                model.clearCart();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Carrinho limpo!')),
+                );
+              },
+            ),
+          ],
         ),
         body: Column(
           children: [
@@ -49,9 +61,28 @@ class CartPage extends StatelessWidget {
                             title: Text(item.name),
                             subtitle: Text(
                                 'Qtd: ${item.quantity} • ${currency.format(item.price)}'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_shopping_cart_rounded),
-                              onPressed: () => model.togglePurchased(item),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                      Icons.remove_shopping_cart_rounded),
+                                  tooltip: 'Retirar do carrinho',
+                                  onPressed: () => model.togglePurchased(item),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  tooltip: 'Excluir item',
+                                  onPressed: () {
+                                    model.remove(item);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Item removido do carrinho!')),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );

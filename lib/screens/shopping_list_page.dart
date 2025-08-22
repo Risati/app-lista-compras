@@ -143,7 +143,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         ),
                       ),
                     IconButton(
-                      icon: Icon(_showSearch ? Icons.close : Icons.search),
+                      icon: Icon(_showSearch ? Icons.close : Icons.search,
+                          color: Colors.white),
                       onPressed: () {
                         setState(() {
                           if (_showSearch) {
@@ -283,7 +284,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           hintText: 'Qtd',
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         onSubmitted: (_) => _add(model),
                       ),
                     ),
@@ -293,7 +296,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       height: 48,
                       child: ElevatedButton(
                         onPressed: () => _add(model),
-                        child: const Icon(Icons.add, color: Colors.white, size: 24),
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 24),
                       ),
                     ),
                   ],
@@ -309,14 +313,15 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     return Card(
                       child: ListTile(
                         visualDensity: const VisualDensity(vertical: -4),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         tileColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         title: GestureDetector(
-                          onTap: () => _showEditNameDialog(context, model, item),
+                          onTap: () =>
+                              _showEditNameDialog(context, model, item),
                           child: Text(item.name),
                         ),
                         subtitle: Row(
@@ -332,27 +337,48 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _showEditItemDialog(context, model, item),
+                              icon: Icon(
+                                item.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: item.isFavorite
+                                    ? Colors.amber
+                                    : Colors.grey,
+                              ),
+                              onPressed: () {
+                                Provider.of<ShoppingListModel>(context,
+                                        listen: false)
+                                    .toggleFavorite(item);
+                              },
                             ),
                             IconButton(
-                              icon: const Icon(Icons.add_shopping_cart_outlined),
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () =>
+                                  _showEditItemDialog(context, model, item),
+                            ),
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.add_shopping_cart_outlined),
                               onPressed: () => model.togglePurchased(item),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.redAccent),
                               onPressed: () async {
                                 final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     title: const Text('Remover item'),
-                                    content: Text('Deseja remover "${item.name}" da lista?'),
+                                    content: Text(
+                                        'Deseja remover "${item.name}" da lista?'),
                                     actions: [
                                       TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
                                           child: const Text('Cancelar')),
                                       TextButton(
-                                          onPressed: () => Navigator.pop(context, true),
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
                                           child: const Text('Remover')),
                                     ],
                                   ),
@@ -395,7 +421,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           inputFormatters: [currencyFormatter],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
@@ -422,7 +450,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           decoration: const InputDecoration(labelText: 'Nome'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               final newName = ctrl.text.trim();
