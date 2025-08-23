@@ -120,7 +120,24 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Lembra AÍ'),
+            title: const Column(
+              children: [
+                Text(
+                  'Lembra AÍ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
+                  ),
+                ),
+                Text(
+                  'Listas de Compras',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
             centerTitle: true,
             actions: [
               AnimatedContainer(
@@ -178,9 +195,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       onPressed: model.toggleSort,
                     ),
                     const Spacer(),
-                    Text(
-                      'Orçamento: ${currency.format(model.budget)}',
-                      style: const TextStyle(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Orçamento: ${currency.format(model.budget)}',
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
