@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../models/shopping_list.dart';
 import 'list_tab.dart' show ListTab;
 import 'cart_tab.dart' show CartPage;
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final ShoppingList list;
+  const HomeScreen({super.key, required this.list});
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +22,10 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            ListTab(),
-            CartPage(),
+            ListTab(list: list),
+            CartPage(list: list),
           ],
         ),
       ),

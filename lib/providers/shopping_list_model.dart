@@ -1,41 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/grocery_item.dart';
+import '../models/shopping_list.dart';
 
 class ShoppingListModel extends ChangeNotifier {
-  late Box<GroceryItem> _box;
-  late Box _settings;
   late Box<GroceryItem> _favoritesBox;
-
-  List<GroceryItem> items = [];
-  double budget = 0.0;
+  late Box _settings;
+  final ShoppingList list;
   bool isAsc = true;
+  double budget = 0.0;
 
-  /// Inicializa as boxes de forma segura
-  Future<void> init() async {
-    if (!Hive.isBoxOpen('grocery_box')) {
-      await Hive.openBox<GroceryItem>('grocery_box');
-    }
-    if (!Hive.isBoxOpen('settings')) {
-      await Hive.openBox('settings');
-    }
+  ShoppingListModel(this.list) {
+    _initFavoritesBox();
+    _initSettings();
+  }
+
+  Future<void> _initFavoritesBox() async {
     if (!Hive.isBoxOpen('favorites_box')) {
       await Hive.openBox<GroceryItem>('favorites_box');
     }
-
-    _box = Hive.box<GroceryItem>('grocery_box');
-    _settings = Hive.box('settings');
     _favoritesBox = Hive.box<GroceryItem>('favorites_box');
-
-    items = _box.values.toList();
-    budget = _settings.get('budget', defaultValue: 0.0) as double;
-    _sort();
     notifyListeners();
   }
 
-  // --------------------
-  // Getters seguros
-  // --------------------
+  Future<void> _initSettings() async {
+    if (!Hive.isBoxOpen('settings')) {
+      await Hive.openBox('settings');
+    }
+    _settings = Hive.box('settings');
+    budget = _settings.get('budget', defaultValue: 0.0) as double;
+    notifyListeners();
+  }
+
+  List<GroceryItem> get items => list.items;
+
   List<GroceryItem> get available => items.where((i) => !i.purchased).toList();
 
   List<GroceryItem> get cart => items.where((i) => i.purchased).toList();
@@ -47,20 +45,23 @@ class ShoppingListModel extends ChangeNotifier {
 
   double get remaining => budget - total;
 
-  // --------------------
-  // Métodos principais
-  // --------------------
   void addQuick(String name, int qty) {
     final item = GroceryItem(name: name, quantity: qty);
-    _box.add(item);
     items.add(item);
     _sort();
+    list.save();
+    notifyListeners();
+  }
+
+  void remove(GroceryItem item) {
+    items.remove(item);
+    list.save();
     notifyListeners();
   }
 
   void togglePurchased(GroceryItem item) {
     item.purchased = !item.purchased;
-    item.save();
+    list.save();
     notifyListeners();
   }
 
@@ -73,27 +74,34 @@ class ShoppingListModel extends ChangeNotifier {
     if (name != null) item.name = name;
     if (qty != null) item.quantity = qty;
     if (price != null) item.price = price;
-    item.save();
-    notifyListeners();
-  }
-
-  void updateBudget(double value) {
-    budget = value;
-    _settings.put('budget', value);
+    list.save();
     notifyListeners();
   }
 
   void clearCart() {
-    for (var i in cart) {
+    final toRemove = cart.toList();
+    for (var i in toRemove) {
       items.remove(i);
-      i.delete(); // Remove do Hive
     }
+    list.save();
     notifyListeners();
   }
 
   void toggleSort() {
     isAsc = !isAsc;
     _sort();
+    notifyListeners();
+  }
+
+  void _sort() {
+    items.sort(
+      (a, b) => isAsc ? a.name.compareTo(b.name) : b.name.compareTo(a.name),
+    );
+  }
+
+  void updateBudget(double value) {
+    budget = value;
+    _settings.put('budget', value);
     notifyListeners();
   }
 
@@ -105,21 +113,9 @@ class ShoppingListModel extends ChangeNotifier {
         orElse: () => null,
       );
       if (key != null) _favoritesBox.delete(key);
-      // Atualiza apenas o objeto da lista principal se ele estiver em uma box
-      if (item.isInBox) {
-        item.isFavorite = false;
-        item.save();
-      } else {
-        item.isFavorite = false;
-      }
+      item.isFavorite = false;
     } else {
-      // Atualiza apenas o objeto da lista principal se ele estiver em uma box
-      if (item.isInBox) {
-        item.isFavorite = true;
-        item.save();
-      } else {
-        item.isFavorite = true;
-      }
+      item.isFavorite = true;
       final fav = GroceryItem(
         name: item.name,
         quantity: item.quantity,
@@ -130,11 +126,11 @@ class ShoppingListModel extends ChangeNotifier {
       );
       _favoritesBox.add(fav);
     }
+    list.save();
     notifyListeners();
   }
 
   void addFavoriteToList(GroceryItem favorite) {
-    // Cria uma cópia do favorito para evitar conflitos de Hive
     final item = GroceryItem(
       name: favorite.name,
       quantity: favorite.quantity,
@@ -143,24 +139,9 @@ class ShoppingListModel extends ChangeNotifier {
       category: favorite.category,
       isFavorite: true,
     );
-    _box.add(item);
     items.add(item);
     _sort();
+    list.save();
     notifyListeners();
-  }
-
-  void remove(GroceryItem item) {
-    items.remove(item);
-    item.delete(); // Remove do Hive da lista principal
-    notifyListeners();
-  }
-
-  // --------------------
-  // Ordenação
-  // --------------------
-  void _sort() {
-    items.sort(
-      (a, b) => isAsc ? a.name.compareTo(b.name) : b.name.compareTo(a.name),
-    );
   }
 }

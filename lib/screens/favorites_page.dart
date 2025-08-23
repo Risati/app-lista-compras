@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/shopping_list_model.dart';
+import '../models/shopping_list.dart';
 
 class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({super.key});
+  final ShoppingList list;
+  const FavoritesPage({super.key, required this.list});
 
   @override
   Widget build(BuildContext context) {

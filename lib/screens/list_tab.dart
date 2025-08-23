@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/shopping_list.dart';
 
 import '../providers/shopping_provider.dart';
 
 class ListTab extends StatelessWidget {
-  const ListTab({super.key}); // ✅ já está const
+  final ShoppingList list; // ⚠️ precisa estar definido
+  const ListTab({super.key, required this.list}); // ⚠️ construtor correto
 
   @override
   Widget build(BuildContext context) {

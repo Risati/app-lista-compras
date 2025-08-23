@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../models/shopping_list.dart';
 
 import '../providers/shopping_list_model.dart';
 
 class CartPage extends StatelessWidget {
-  const CartPage({super.key});
+  final ShoppingList list;
+  const CartPage({super.key, required this.list});
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');

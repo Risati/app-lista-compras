@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../models/shopping_list.dart';
 
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
 
 class ShoppingListPage extends StatefulWidget {
-  const ShoppingListPage({super.key});
+  final ShoppingList list;
+  const ShoppingListPage({super.key, required this.list});
   @override
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
