@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../models/shopping_list.dart';
 
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
 
 class ShoppingListPage extends StatefulWidget {
-  const ShoppingListPage({super.key});
+  final ShoppingList list;
+  const ShoppingListPage({super.key, required this.list});
   @override
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
@@ -118,7 +120,24 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Lembra AÍ'),
+            title: const Column(
+              children: [
+                Text(
+                  'Lembra AÍ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
+                  ),
+                ),
+                Text(
+                  'Listas de Compras',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
             centerTitle: true,
             actions: [
               AnimatedContainer(
@@ -176,9 +195,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       onPressed: model.toggleSort,
                     ),
                     const Spacer(),
-                    Text(
-                      'Orçamento: ${currency.format(model.budget)}',
-                      style: const TextStyle(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Orçamento: ${currency.format(model.budget)}',
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(

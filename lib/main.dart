@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'models/shopping_list.dart';
+import 'providers/lists_provider.dart';
+import 'screens/lists_menu_page.dart';
 
 import 'theme.dart';
 import 'models/grocery_item.dart';
@@ -15,21 +18,23 @@ Future<void> main() async {
   // Inicializa Hive
   await Hive.initFlutter();
 
-  // Registra o adapter antes de abrir a box
+  // Registra os adapters antes de abrir as boxes
   Hive.registerAdapter(GroceryItemAdapter());
+  Hive.registerAdapter(ShoppingListAdapter());
 
   // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
   await Hive.openBox('settings');
   await Hive.openBox<GroceryItem>('favorites_box');
+  await Hive.openBox<ShoppingList>('lists_box');
 
-  // Inicializa o modelo e garante que as boxes estejam carregadas
-  final shoppingListModel = ShoppingListModel();
-  await shoppingListModel.init();
+  // Inicializa o provider de listas e carrega as listas
+  final listsProvider = ListsProvider();
+  await listsProvider.loadLists();
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => shoppingListModel,
+      create: (_) => listsProvider,
       child: const MyApp(),
     ),
   );
@@ -44,13 +49,14 @@ class MyApp extends StatelessWidget {
       title: 'Lembra AÍ',
       debugShowCheckedModeBanner: false,
       theme: elegantTheme,
-      home: const AppTabs(),
+      home: const ListsMenuPage(), // Tela inicial: menu de listas
     );
   }
 }
 
 class AppTabs extends StatefulWidget {
-  const AppTabs({super.key});
+  final ShoppingList list;
+  const AppTabs({super.key, required this.list});
 
   @override
   State<AppTabs> createState() => _AppTabsState();
@@ -59,11 +65,26 @@ class AppTabs extends StatefulWidget {
 class _AppTabsState extends State<AppTabs> {
   int _currentIndex = 0;
 
-  static final _pages = [
-    const ShoppingListPage(),
-    const CartPage(),
-    const FavoritesPage(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      ChangeNotifierProvider(
+        create: (_) => ShoppingListModel(widget.list),
+        child: ShoppingListPage(list: widget.list),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => ShoppingListModel(widget.list),
+        child: CartPage(list: widget.list),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => ShoppingListModel(widget.list),
+        child: FavoritesPage(list: widget.list),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
