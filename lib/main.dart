@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'models/shopping_list.dart';
+
 
 import 'theme.dart';
 import 'models/grocery_item.dart';
@@ -17,11 +19,13 @@ Future<void> main() async {
 
   // Registra o adapter antes de abrir a box
   Hive.registerAdapter(GroceryItemAdapter());
+  Hive.registerAdapter(ShoppingListAdapter());
 
   // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
   await Hive.openBox('settings');
   await Hive.openBox<GroceryItem>('favorites_box');
+  await Hive.openBox<ShoppingList>('lists_box');
 
   // Inicializa o modelo e garante que as boxes estejam carregadas
   final shoppingListModel = ShoppingListModel();
