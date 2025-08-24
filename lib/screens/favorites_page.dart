@@ -48,8 +48,8 @@ class FavoritesPage extends StatelessWidget {
                     content: Text('"${item.name}" adicionado à lista!'),
                     duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(
-                        bottom: 20, right: 20, left: 20),
+                    margin:
+                        const EdgeInsets.only(bottom: 20, right: 20, left: 20),
                   ),
                 );
                 return false; // Não remove dos favoritos

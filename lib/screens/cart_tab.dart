@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/shopping_list.dart';
 import '../providers/shopping_list_model.dart';
-import '../models/grocery_item.dart';
 
 class CartPage extends StatelessWidget {
   final ShoppingList list;
@@ -41,7 +40,8 @@ class CartPage extends StatelessWidget {
                     children: [
                       Column(
                         children: [
-                          const Icon(Icons.account_balance_wallet, color: Colors.blue),
+                          const Icon(Icons.account_balance_wallet,
+                              color: Colors.blue),
                           const SizedBox(height: 4),
                           const Text(
                             'Orçamento',
@@ -55,7 +55,8 @@ class CartPage extends StatelessWidget {
                       ),
                       Column(
                         children: [
-                          Icon(Icons.shopping_cart_checkout, color: Colors.green[700]),
+                          Icon(Icons.shopping_cart_checkout,
+                              color: Colors.green[700]),
                           const SizedBox(height: 4),
                           const Text('Gasto',
                               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -71,7 +72,8 @@ class CartPage extends StatelessWidget {
                       ),
                       Column(
                         children: [
-                          Icon(Icons.account_balance, color: Colors.orange[700]),
+                          Icon(Icons.account_balance,
+                              color: Colors.orange[700]),
                           const SizedBox(height: 4),
                           const Text('Restante',
                               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -79,7 +81,9 @@ class CartPage extends StatelessWidget {
                             currency.format(remaining),
                             style: TextStyle(
                               fontSize: 16,
-                              color: remaining >= 0 ? Colors.orange[700] : Colors.red,
+                              color: remaining >= 0
+                                  ? Colors.orange[700]
+                                  : Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -91,7 +95,8 @@ class CartPage extends StatelessWidget {
               ),
               if (cart.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -101,7 +106,8 @@ class CartPage extends StatelessWidget {
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        textStyle: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -111,7 +117,8 @@ class CartPage extends StatelessWidget {
                           context: context,
                           builder: (_) => AlertDialog(
                             title: const Text('Finalizar compra'),
-                            content: const Text('Deseja limpar todo o carrinho?'),
+                            content:
+                                const Text('Deseja limpar todo o carrinho?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
@@ -152,19 +159,22 @@ class CartPage extends StatelessWidget {
                               color: Colors.orange,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.only(left: 24),
-                              child: const Icon(Icons.undo, color: Colors.white, size: 32),
+                              child: const Icon(Icons.undo,
+                                  color: Colors.white, size: 32),
                             ),
                             secondaryBackground: Container(
                               color: Colors.red,
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: 24),
-                              child: const Icon(Icons.delete, color: Colors.white, size: 32),
+                              child: const Icon(Icons.delete,
+                                  color: Colors.white, size: 32),
                             ),
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
                                 model.togglePurchased(item);
                                 return false;
-                              } else if (direction == DismissDirection.endToStart) {
+                              } else if (direction ==
+                                  DismissDirection.endToStart) {
                                 model.remove(item);
                                 return true;
                               }
@@ -172,7 +182,8 @@ class CartPage extends StatelessWidget {
                             },
                             child: Card(
                               child: ListTile(
-                                visualDensity: const VisualDensity(vertical: -4),
+                                visualDensity:
+                                    const VisualDensity(vertical: -4),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 4),
                                 tileColor: Colors.white,
@@ -184,9 +195,11 @@ class CartPage extends StatelessWidget {
                                   children: [
                                     Text('Qtd: ${item.quantity}'),
                                     const SizedBox(width: 12),
-                                    Text('R\$ ${item.price.toStringAsFixed(2)}'),
+                                    Text(
+                                        'R\$ ${item.price.toStringAsFixed(2)}'),
                                     const SizedBox(width: 12),
-                                    Text('Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
+                                    Text(
+                                        'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
                                   ],
                                 ),
                                 trailing: IconButton(
@@ -199,7 +212,8 @@ class CartPage extends StatelessWidget {
                                         : Colors.grey,
                                   ),
                                   onPressed: () {
-                                    Provider.of<ShoppingListModel>(context, listen: false)
+                                    Provider.of<ShoppingListModel>(context,
+                                            listen: false)
                                         .toggleFavorite(item);
                                   },
                                 ),

@@ -14,7 +14,8 @@ class ShoppingListPage extends StatefulWidget {
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
 
-class _ShoppingListPageState extends State<ShoppingListPage> with SingleTickerProviderStateMixin {
+class _ShoppingListPageState extends State<ShoppingListPage>
+    with SingleTickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController(text: '1');
   String _searchQuery = '';
@@ -337,13 +338,15 @@ class _ShoppingListPageState extends State<ShoppingListPage> with SingleTickerPr
                         color: Colors.green,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.only(left: 24),
-                        child: const Icon(Icons.check, color: Colors.white, size: 32),
+                        child: const Icon(Icons.check,
+                            color: Colors.white, size: 32),
                       ),
                       secondaryBackground: Container(
                         color: Colors.red,
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 24),
-                        child: const Icon(Icons.delete, color: Colors.white, size: 32),
+                        child: const Icon(Icons.delete,
+                            color: Colors.white, size: 32),
                       ),
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
