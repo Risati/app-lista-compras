@@ -13,9 +13,13 @@ class BarcodeScannerPage extends StatefulWidget {
 
 class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
   bool _isProcessing = false;
+  MobileScannerController controller = MobileScannerController();
 
   void _handleBarcode(String code) async {
     if (_isProcessing) return;
+
+    // Parar o scanner após leitura
+    await controller.stop();
     setState(() => _isProcessing = true);
 
     final product = await BarcodeService.fetchProduct(code);
