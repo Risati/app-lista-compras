@@ -22,27 +22,38 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     await controller.stop();
     setState(() => _isProcessing = true);
 
-    final product = await BarcodeService.fetchProduct(code);
-    if (!mounted) return; // <-- evita uso de BuildContext inválido
+    try {
+      final product = await BarcodeService.fetchProduct(code);
+      if (!mounted) return;
 
-    // Adicionando o nome do produto + marca
-    // E.g. Creme de Leite Leve UHT - Mococa
-    String name = code;
-    if (product != null) {
-      if (product.name != null && product.brand != null) {
-        name = '${product.name} - ${product.brand}';
-      } else {
-        name = product.name ?? product.brand ?? code;
+      // Adicionando o nome do produto + marca
+      String name = code;
+      if (product != null) {
+        if (product.name != null && product.brand != null) {
+          name = '${product.name} - ${product.brand}';
+        } else {
+          name = product.name ?? product.brand ?? code;
+        }
+      }
+
+      Provider.of<ShoppingListModel>(context, listen: false).addQuick(name, 1);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Adicionado: $name')),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao processar o código')),
+      );
+    } finally {
+      // Garantir que _isProcessing seja resetado mesmo em caso de erro
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
     }
-
-    Provider.of<ShoppingListModel>(context, listen: false).addQuick(name, 1);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Adicionado: $name')),
-    );
-
-    Navigator.of(context).pop();
   }
 
   @override
