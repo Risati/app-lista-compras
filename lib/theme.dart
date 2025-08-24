@@ -29,6 +29,7 @@ final ThemeData elegantTheme = ThemeData(
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
+      // ignore: deprecated_member_use
       borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
     ),
     focusedBorder: OutlineInputBorder(

@@ -8,9 +8,12 @@ import 'screens/lists_menu_page.dart';
 import 'theme.dart';
 import 'models/grocery_item.dart';
 import 'providers/shopping_list_model.dart';
+import 'providers/reports_provider.dart';
 import 'screens/shopping_list_page.dart';
 import 'screens/cart_tab.dart';
 import 'screens/favorites_page.dart';
+import 'models/report_item.dart';
+import 'models/report_snapshot.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +24,8 @@ Future<void> main() async {
   // Registra os adapters antes de abrir as boxes
   Hive.registerAdapter(GroceryItemAdapter());
   Hive.registerAdapter(ShoppingListAdapter());
+  Hive.registerAdapter(ReportItemAdapter());
+  Hive.registerAdapter(ReportSnapshotAdapter());
 
   // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
@@ -31,10 +36,16 @@ Future<void> main() async {
   // Inicializa o provider de listas e carrega as listas
   final listsProvider = ListsProvider();
   await listsProvider.loadLists();
+  await Hive.openBox<ReportSnapshot>('reports_box');
+
+  final reportsProvider = ReportsProvider();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => listsProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => listsProvider),
+        ChangeNotifierProvider(create: (_) => reportsProvider),
+      ],
       child: const MyApp(),
     ),
   );

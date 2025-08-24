@@ -7,6 +7,8 @@ import '../models/shopping_list.dart';
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
+import '../providers/reports_provider.dart';
+import 'reports_page.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -140,6 +142,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             ),
             centerTitle: true,
             actions: [
+              // AnimatedContainer só com a busca
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: _showSearch ? 220 : 48,
@@ -156,9 +159,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(vertical: 8),
                           ),
-                          onChanged: (query) {
-                            setState(() => _searchQuery = query);
-                          },
+                          onChanged: (query) =>
+                              setState(() => _searchQuery = query),
                         ),
                       ),
                     IconButton(
@@ -176,6 +178,63 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     ),
                   ],
                 ),
+              ),
+
+              // Ícone para abrir relatórios (fora do AnimatedContainer)
+              IconButton(
+                icon: const Icon(Icons.insert_chart, color: Colors.white),
+                tooltip: 'Ver relatórios',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ReportsListPage()),
+                ),
+              ),
+
+              // Ícone Concluir compra (fora do AnimatedContainer)
+              IconButton(
+                icon: const Icon(Icons.check, color: Colors.white),
+                tooltip: 'Concluir compra',
+                onPressed: () async {
+                  final model = context.read<ShoppingListModel>();
+                  final reports = context.read<ReportsProvider>();
+                  final messenger =
+                      ScaffoldMessenger.of(context); // capture antes do await
+
+                  final marketName = await showDialog<String>(
+                    context: context,
+                    builder: (ctx) {
+                      final ctl = TextEditingController();
+                      return AlertDialog(
+                        title: const Text('Nome do Mercado'),
+                        content: TextField(
+                            controller: ctl,
+                            decoration: const InputDecoration(
+                                hintText: 'Nome do mercado')),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text('Cancelar')),
+                          TextButton(
+                              onPressed: () =>
+                                  Navigator.of(ctx).pop(ctl.text.trim()),
+                              child: const Text('OK')),
+                        ],
+                      );
+                    },
+                  );
+                  if (!mounted) return;
+                  if (marketName == null || marketName.isEmpty) return;
+
+                  final report =
+                      reports.generateFromModel(model, marketName: marketName);
+                  await reports.saveReport(report);
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Relatório salvo — Total: ${report.total.toStringAsFixed(2)}')),
+                  );
+                },
               ),
             ],
             bottom: PreferredSize(
