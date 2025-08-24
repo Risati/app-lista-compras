@@ -25,32 +25,50 @@ class FavoritesPage extends StatelessWidget {
         itemCount: favorites.length,
         itemBuilder: (_, i) {
           final item = favorites[i];
-          return ListTile(
-            title: Text(item.name),
-            subtitle: Text('Qtd: ${item.quantity}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.star, color: Colors.amber),
-                  onPressed: () {
-                    model.toggleFavorite(item);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    Provider.of<ShoppingListModel>(context, listen: false)
-                        .addFavoriteToList(item);
-                  },
-                ),
-              ],
+          return Dismissible(
+            key: ValueKey(item.name + item.quantity.toString()),
+            background: Container(
+              color: Colors.green,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 24),
+              child: const Icon(Icons.add, color: Colors.white, size: 32),
             ),
-            leading: Checkbox(
-              value: item.purchased,
-              onChanged: (_) {
-                model.togglePurchased(item);
-              },
+            secondaryBackground: Container(
+              color: Colors.red,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 24),
+              child: const Icon(Icons.delete, color: Colors.white, size: 32),
+            ),
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                // Swipe para a direita: adicionar à lista
+                model.addFavoriteToList(item);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('"${item.name}" adicionado à lista!'),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.only(
+                        bottom: 20, right: 20, left: 20),
+                  ),
+                );
+                return false; // Não remove dos favoritos
+              } else if (direction == DismissDirection.endToStart) {
+                // Swipe para a esquerda: remover dos favoritos
+                model.toggleFavorite(item);
+                return true;
+              }
+              return false;
+            },
+            child: ListTile(
+              title: Text(item.name),
+              subtitle: Text('Qtd: ${item.quantity}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.star, color: Colors.amber),
+                onPressed: () {
+                  model.toggleFavorite(item);
+                },
+              ),
             ),
           );
         },
