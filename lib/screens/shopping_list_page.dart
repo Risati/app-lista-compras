@@ -213,12 +213,19 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               ),
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            tooltip: 'Escanear código de barras',
-            heroTag: 'scan_fab',
-            child: const Icon(Icons.qr_code_scanner),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BarcodeScannerPage()),
+          floatingActionButton: Consumer<ShoppingListModel>(
+            builder: (context, model, _) => FloatingActionButton(
+              tooltip: 'Escanear código de barras',
+              heroTag: 'scan_fab',
+              child: const Icon(Icons.qr_code_scanner),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BarcodeScannerPage(
+                    list: widget.list,
+                    model: model, // Usa o modelo do Consumer
+                  ),
+                ),
+              ),
             ),
           ),
           body: Column(
