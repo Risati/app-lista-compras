@@ -3,6 +3,7 @@ import 'package:lista_elegante/theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/lists_provider.dart';
 import '../main.dart'; // Para AppTabs
+import '../providers/theme_provider.dart';
 
 class ListsMenuPage extends StatelessWidget {
   const ListsMenuPage({super.key});
@@ -34,6 +35,20 @@ class ListsMenuPage extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+        IconButton(
+          icon: Icon(
+            Theme.of(context).brightness == Brightness.dark
+                ? Icons.light_mode
+                : Icons.dark_mode,
+            color: Colors.white,
+          ),
+          tooltip: 'Alternar tema',
+          onPressed: () {
+            Provider.of<ThemeProvider>(context, listen: false).toggleMode();
+          },
+        ),
+      ],
       ),
       body: listsProvider.lists.isEmpty
           ? const Center(child: Text('Nenhuma lista criada'))
@@ -51,36 +66,39 @@ class ListsMenuPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    color: Colors.blue[50 * ((i % 8) + 1)],
+                    color: Theme.of(context).colorScheme.surface, // cor do card adaptada ao tema
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         child: Icon(
                           _getIconForList(list.name),
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary, // contraste automático
                         ),
                       ),
                       title: Text(
                         list.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            icon: Icon(Icons.edit,
+                                color: Theme.of(context).colorScheme.secondary),
                             tooltip: 'Renomear lista',
                             onPressed: () async {
-                              final newName =
-                                  await _showRenameDialog(context, list.name);
+                              final newName = await _showRenameDialog(context, list.name);
                               if (newName != null && newName.isNotEmpty) {
                                 await listsProvider.renameList(list, newName);
                               }
                             },
                           ),
                           IconButton(
-                            icon:
-                                const Icon(Icons.delete, color: secondaryColor),
+                            icon: Icon(Icons.delete,
+                                color: Theme.of(context).colorScheme.error),
                             tooltip: 'Excluir lista',
                             onPressed: () async {
                               final confirm = await showDialog<bool>(
@@ -88,16 +106,15 @@ class ListsMenuPage extends StatelessWidget {
                                 builder: (context) => AlertDialog(
                                   title: const Text('Excluir lista?'),
                                   content: Text(
-                                      'Tem certeza que deseja excluir "${list.name}"?'),
+                                    'Tem certeza que deseja excluir "${list.name}"?',
+                                  ),
                                   actions: [
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
+                                      onPressed: () => Navigator.of(context).pop(false),
                                       child: const Text('Cancelar'),
                                     ),
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
+                                      onPressed: () => Navigator.of(context).pop(true),
                                       child: const Text('Excluir'),
                                     ),
                                   ],
@@ -108,8 +125,8 @@ class ListsMenuPage extends StatelessWidget {
                               }
                             },
                           ),
-                          const Icon(Icons.arrow_forward_ios,
-                              color: Colors.blueAccent),
+                          Icon(Icons.arrow_forward_ios,
+                              color: Theme.of(context).colorScheme.primary),
                         ],
                       ),
                       onTap: () {

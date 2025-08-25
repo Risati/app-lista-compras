@@ -182,43 +182,54 @@ class CartPage extends StatelessWidget {
                             },
                             child: Card(
                               child: ListTile(
-                                visualDensity:
-                                    const VisualDensity(vertical: -4),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 4),
-                                tileColor: Colors.white,
+                                visualDensity: const VisualDensity(vertical: -4),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                tileColor: Theme.of(context).colorScheme.surface, // se adapta ao tema
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                title: Text(item.name),
+                                title: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface, // texto adaptável
+                                  ),
+                                ),
                                 subtitle: Row(
                                   children: [
-                                    Text('Qtd: ${item.quantity}'),
+                                    Text(
+                                      'Qtd: ${item.quantity}',
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                    ),
                                     const SizedBox(width: 12),
                                     Text(
-                                        'R\$ ${item.price.toStringAsFixed(2)}'),
+                                      'R\$ ${item.price.toStringAsFixed(2)}',
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                    ),
                                     const SizedBox(width: 12),
                                     Text(
-                                        'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
+                                      'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.primary, // destaca o total
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 trailing: IconButton(
                                   icon: Icon(
-                                    item.isFavorite
-                                        ? Icons.star
-                                        : Icons.star_border,
+                                    item.isFavorite ? Icons.star : Icons.star_border,
                                     color: item.isFavorite
-                                        ? Colors.amber
-                                        : Colors.grey,
+                                        ? Colors.amber // favorito continua dourado
+                                        : Theme.of(context).iconTheme.color?.withOpacity(0.6),
                                   ),
                                   onPressed: () {
-                                    Provider.of<ShoppingListModel>(context,
-                                            listen: false)
+                                    Provider.of<ShoppingListModel>(context, listen: false)
                                         .toggleFavorite(item);
                                   },
                                 ),
                               ),
                             ),
+
                           );
                         },
                       ),

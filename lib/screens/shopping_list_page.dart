@@ -6,6 +6,7 @@ import '../models/shopping_list.dart';
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
+import '../providers/theme_provider.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -121,7 +122,8 @@ class _ShoppingListPageState extends State<ShoppingListPage>
         return Scaffold(
           appBar: AppBar(
             title: const Column(
-              children: [
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: const [
                 Text(
                   'Lembra AÍ',
                   style: TextStyle(
@@ -140,6 +142,22 @@ class _ShoppingListPageState extends State<ShoppingListPage>
             ),
             centerTitle: true,
             actions: [
+              // Botão alternar tema
+              IconButton(
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                  color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Theme.of(context).colorScheme.onPrimary,
+                ),
+                tooltip: 'Alternar tema',
+                onPressed: () {
+                  Provider.of<ThemeProvider>(context, listen: false).toggleMode();
+                },
+              ),
+
+              // Busca
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: _showSearch ? 220 : 48,
@@ -150,11 +168,17 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         child: TextField(
                           controller: _searchCtrl,
                           autofocus: true,
-                          decoration: const InputDecoration(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          decoration: InputDecoration(
                             hintText: 'Buscar...',
+                            hintStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+                            ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                           onChanged: (query) {
                             setState(() => _searchQuery = query);
@@ -162,8 +186,11 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         ),
                       ),
                     IconButton(
-                      icon: Icon(_showSearch ? Icons.close : Icons.search,
-                          color: Colors.white),
+                      icon: Icon(
+                        _showSearch ? Icons.close : Icons.search,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
+                      ),
                       onPressed: () {
                         setState(() {
                           if (_showSearch) {
@@ -178,11 +205,12 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                 ),
               ),
             ],
+
+            // Barra inferior
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -190,21 +218,31 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         model.isAsc
                             ? Icons.sort_by_alpha
                             : Icons.sort_by_alpha_outlined,
-                        color: Colors.white,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
                       ),
+                      tooltip: 'Ordenar lista',
                       onPressed: model.toggleSort,
                     ),
                     Expanded(
                       child: Text(
                         'Orçamento: ${currency.format(model.budget)}',
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.right,
                       ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.white),
+                      icon: Icon(
+                        Icons.edit,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
+                      ),
+                      tooltip: 'Editar orçamento',
                       onPressed: () => _showBudgetDialog(context, model),
                     ),
                   ],
@@ -212,6 +250,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
               ),
             ),
           ),
+
           floatingActionButton: Consumer<ShoppingListModel>(
             builder: (context, model, _) => FloatingActionButton(
               tooltip: 'Escanear código de barras',
@@ -370,24 +409,39 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                       child: Card(
                         child: ListTile(
                           visualDensity: const VisualDensity(vertical: -4),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          tileColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          tileColor: Theme.of(context).colorScheme.surface, // se adapta ao tema
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           title: GestureDetector(
-                            onTap: () =>
-                                _showEditNameDialog(context, model, item),
-                            child: Text(item.name),
+                            onTap: () => _showEditNameDialog(context, model, item),
+                            child: Text(
+                              item.name,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
                           ),
                           subtitle: Row(
                             children: [
-                              Text('Qtd: ${item.quantity}'),
+                              Text(
+                                'Qtd: ${item.quantity}',
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              ),
                               const SizedBox(width: 12),
-                              Text(currency.format(item.price)),
+                              Text(
+                                currency.format(item.price),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              ),
                               const SizedBox(width: 12),
-                              Text(currency.format(item.quantity * item.price)),
+                              Text(
+                                currency.format(item.quantity * item.price),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary, // destaca o total
+                                ),
+                              ),
                             ],
                           ),
                           trailing: Row(
@@ -395,28 +449,29 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  item.isFavorite
-                                      ? Icons.star
-                                      : Icons.star_border,
+                                  item.isFavorite ? Icons.star : Icons.star_border,
                                   color: item.isFavorite
-                                      ? Colors.amber
-                                      : Colors.grey,
+                                      ? Colors.amber // mantém destaque no favorito
+                                      : Theme.of(context).iconTheme.color?.withOpacity(0.6),
                                 ),
                                 onPressed: () {
-                                  Provider.of<ShoppingListModel>(context,
-                                          listen: false)
+                                  Provider.of<ShoppingListModel>(context, listen: false)
                                       .toggleFavorite(item);
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit, size: 20),
-                                onPressed: () =>
-                                    _showEditItemDialog(context, model, item),
+                                icon: Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: Theme.of(context).iconTheme.color, // pega do tema
+                                ),
+                                onPressed: () => _showEditItemDialog(context, model, item),
                               ),
                             ],
                           ),
                         ),
                       ),
+
                     );
                   },
                 ),
