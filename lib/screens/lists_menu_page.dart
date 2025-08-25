@@ -176,10 +176,49 @@ class ListsMenuPage extends StatelessWidget {
 
   IconData _getIconForList(String name) {
     final lower = name.toLowerCase();
+
     if (lower.contains('churrasco')) return Icons.outdoor_grill;
-    if (lower.contains('semanal')) return Icons.calendar_today;
-    if (lower.contains('padaria')) return Icons.bakery_dining;
-    if (lower.contains('frutas')) return Icons.local_grocery_store;
-    return Icons.list_alt;
+    if (lower.contains('semanal') || lower.contains('semana')) {
+      return Icons.calendar_today;
+    }
+    if (lower.contains('padaria') || lower.contains('pão')) {
+      return Icons.bakery_dining;
+    }
+    if (lower.contains('frutas') || lower.contains('hortifruti')) {
+      return Icons.local_grocery_store;
+    }
+    if (lower.contains('bebida') ||
+        lower.contains('cerveja') ||
+        lower.contains('vinho')) {
+      return Icons.local_bar;
+    }
+    if (lower.contains('carnes') ||
+        lower.contains('açougue') ||
+        lower.contains('frango')) {
+      return Icons.set_meal;
+    }
+    if (lower.contains('limpeza') || lower.contains('produtos de limpeza')) {
+      return Icons.cleaning_services;
+    }
+    if (lower.contains('festa') || lower.contains('aniversário')) {
+      return Icons.celebration;
+    }
+    if (lower.contains('farmácia') || lower.contains('remédio')) {
+      return Icons.local_hospital;
+    }
+    if (lower.contains('lanche') || lower.contains('snack')) {
+      return Icons.fastfood;
+    }
+    if (lower.contains('café') || lower.contains('manhã')) return Icons.coffee;
+    if (lower.contains('vegano') || lower.contains('salada')) return Icons.eco;
+    if (lower.contains('peixe') || lower.contains('marisco')) {
+      return Icons.set_meal; // mesmo de carnes
+    }
+    if (lower.contains('doces') || lower.contains('sobremesa')) {
+      return Icons.cake;
+    }
+    if (lower.contains('pet') || lower.contains('ração')) return Icons.pets;
+
+    return Icons.list_alt; // fallback
   }
 }

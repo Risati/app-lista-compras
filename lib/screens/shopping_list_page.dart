@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/shopping_list.dart';
-
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
@@ -15,7 +14,8 @@ class ShoppingListPage extends StatefulWidget {
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
 
-class _ShoppingListPageState extends State<ShoppingListPage> {
+class _ShoppingListPageState extends State<ShoppingListPage>
+    with SingleTickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController(text: '1');
   String _searchQuery = '';
@@ -194,7 +194,6 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       ),
                       onPressed: model.toggleSort,
                     ),
-                    const Spacer(),
                     Expanded(
                       child: Text(
                         'Orçamento: ${currency.format(model.budget)}',
@@ -340,83 +339,82 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   separatorBuilder: (_, __) => const SizedBox(height: 4),
                   itemBuilder: (_, i) {
                     final item = filtered[i];
-                    return Card(
-                      child: ListTile(
-                        visualDensity: const VisualDensity(vertical: -4),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        title: GestureDetector(
-                          onTap: () =>
-                              _showEditNameDialog(context, model, item),
-                          child: Text(item.name),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Text('Qtd: ${item.quantity}'),
-                            const SizedBox(width: 12),
-                            Text(currency.format(item.price)),
-                            const SizedBox(width: 12),
-                            Text(currency.format(item.quantity * item.price)),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                item.isFavorite
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: item.isFavorite
-                                    ? Colors.amber
-                                    : Colors.grey,
+                    return Dismissible(
+                      key: ValueKey(item.name + item.quantity.toString()),
+                      background: Container(
+                        color: Colors.green,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 24),
+                        child: const Icon(Icons.check,
+                            color: Colors.white, size: 32),
+                      ),
+                      secondaryBackground: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 24),
+                        child: const Icon(Icons.delete,
+                            color: Colors.white, size: 32),
+                      ),
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          // Swipe para a direita: marcar como comprado
+                          model.togglePurchased(item);
+                          return false; // Não remove visualmente, só marca
+                        } else if (direction == DismissDirection.endToStart) {
+                          // Swipe para a esquerda: remover sem confirmação
+                          model.remove(item);
+                          return true;
+                        }
+                        return false;
+                      },
+                      child: Card(
+                        child: ListTile(
+                          visualDensity: const VisualDensity(vertical: -4),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          tileColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          title: GestureDetector(
+                            onTap: () =>
+                                _showEditNameDialog(context, model, item),
+                            child: Text(item.name),
+                          ),
+                          subtitle: Row(
+                            children: [
+                              Text('Qtd: ${item.quantity}'),
+                              const SizedBox(width: 12),
+                              Text(currency.format(item.price)),
+                              const SizedBox(width: 12),
+                              Text(currency.format(item.quantity * item.price)),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  item.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: item.isFavorite
+                                      ? Colors.amber
+                                      : Colors.grey,
+                                ),
+                                onPressed: () {
+                                  Provider.of<ShoppingListModel>(context,
+                                          listen: false)
+                                      .toggleFavorite(item);
+                                },
                               ),
-                              onPressed: () {
-                                Provider.of<ShoppingListModel>(context,
-                                        listen: false)
-                                    .toggleFavorite(item);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () =>
-                                  _showEditItemDialog(context, model, item),
-                            ),
-                            IconButton(
-                              icon:
-                                  const Icon(Icons.add_shopping_cart_outlined),
-                              onPressed: () => model.togglePurchased(item),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  color: Colors.redAccent),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text('Remover item'),
-                                    content: Text(
-                                        'Deseja remover "${item.name}" da lista?'),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text('Cancelar')),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: const Text('Remover')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) model.remove(item);
-                              },
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                onPressed: () =>
+                                    _showEditItemDialog(context, model, item),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );

@@ -19,8 +19,19 @@ final ThemeData elegantTheme = ThemeData(
     backgroundColor: primaryColor,
     elevation: 0,
     titleTextStyle: GoogleFonts.poppins(
-        fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      color: Colors.white,
+    ),
     centerTitle: true,
+    iconTheme: const IconThemeData(
+      color: Colors.white, // 🔥 Ícones do AppBar sempre brancos
+    ),
+  ),
+  // 🔥 Ícones globais (fora do AppBar)
+  iconTheme: const IconThemeData(
+    color: primaryColor, // todos os ícones usam essa cor
+    size: 26, // opcional: tamanho padrão
   ),
   inputDecorationTheme: InputDecorationTheme(
     isDense: true,
