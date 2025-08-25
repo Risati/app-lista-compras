@@ -269,7 +269,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
-                                    'Orçamento: ${currency.format(model.budget)}',
+                                    'Orçamento: ${currency.format(widget.list.budget)}',
                                     style: TextStyle(
                                       color: Theme.of(context).brightness ==
                                               Brightness.dark
@@ -558,8 +558,8 @@ class _ShoppingListPageState extends State<ShoppingListPage>
     _qtyCtrl.text = '1';
   }
 
-  void _showBudgetDialog(BuildContext context, ShoppingListModel model) {
-    final ctrl = TextEditingController(text: currency.format(model.budget));
+    void _showBudgetDialog(BuildContext context, ShoppingListModel model) {
+    final ctrl = TextEditingController(text: currency.format(widget.list.budget));
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -577,7 +577,9 @@ class _ShoppingListPageState extends State<ShoppingListPage>
             onPressed: () {
               final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
               final v = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              model.updateBudget(v);
+              setState(() {
+                widget.list.budget = v; // Atualiza o orçamento da lista atual
+              });
               Navigator.of(context).pop();
             },
             child: const Text('Salvar'),

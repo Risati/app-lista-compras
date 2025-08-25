@@ -11,5 +11,13 @@ class ShoppingList extends HiveObject {
   @HiveField(1)
   List<GroceryItem> items;
 
-  ShoppingList({required this.name, required this.items});
+  @HiveField(2)
+  double budget;
+
+  ShoppingList({
+    required this.name,
+    required this.items,
+    this.budget = 0.0, // Inicialize aqui
+  });
+
 }

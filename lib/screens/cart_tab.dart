@@ -20,7 +20,7 @@ class CartPage extends StatelessWidget {
           0.0,
           (sum, item) => sum + (item.price * item.quantity),
         );
-        final budget = model.budget;
+        final budget = list.budget;
         final remaining = budget - totalGasto;
 
         return Scaffold(
