@@ -17,6 +17,7 @@ dependencies:
   mobile_scanner: ^6.0.10
   http: ^1.5.0
   intl: ^0.20.2
+  flutter_slidable: ^3.1.0
 
 dev_dependencies:
   flutter_test:

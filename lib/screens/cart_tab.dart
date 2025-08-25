@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../models/shopping_list.dart';
 import '../providers/shopping_list_model.dart';
 
+// ...imports...
+
 class CartPage extends StatelessWidget {
   final ShoppingList list;
   const CartPage({super.key, required this.list});
@@ -93,65 +95,86 @@ class CartPage extends StatelessWidget {
                   ),
                 ),
               ),
-              if (cart.isNotEmpty)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Finalizar compra'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Finalizar compra'),
-                            content:
-                                const Text('Deseja limpar todo o carrinho?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Finalizar'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          model.clearCart();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Carrinho limpo com sucesso!'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ),
               Expanded(
                 child: cart.isEmpty
                     ? const Center(child: Text('Nenhum item no carrinho'))
                     : ListView.separated(
                         padding: const EdgeInsets.all(8),
-                        itemCount: cart.length,
+                        itemCount: cart.length + 1, // +1 para o botão
                         separatorBuilder: (_, __) => const SizedBox(height: 4),
                         itemBuilder: (_, i) {
+                          if (i == cart.length) {
+                            // Botão no final da lista
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.check_circle_outline),
+                                  label: const Text('Finalizar compra'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    textStyle: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: cart.isEmpty
+                                      ? null
+                                      : () async {
+                                          final confirm =
+                                              await showDialog<bool>(
+                                            context: context,
+                                            builder: (_) => AlertDialog(
+                                              title: const Text(
+                                                  'Finalizar compra'),
+                                              content: const Text(
+                                                  'Deseja limpar todo o carrinho?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, false),
+                                                  child: const Text('Cancelar'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, true),
+                                                  child:
+                                                      const Text('Finalizar'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true) {
+                                            // Guardar o context antes da operação
+                                            // e verificar se ainda está montado
+                                            // Evita async gaps
+                                            if (!context.mounted) return;
+
+                                            model.clearCart();
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Carrinho limpo com sucesso!'),
+                                                duration: Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                ),
+                              ),
+                            );
+                          }
+
                           final item = cart[i];
                           return Dismissible(
                             key: ValueKey(item.name + item.quantity.toString()),
@@ -186,20 +209,45 @@ class CartPage extends StatelessWidget {
                                     const VisualDensity(vertical: -4),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 4),
-                                tileColor: Colors.white,
+                                tileColor:
+                                    Theme.of(context).colorScheme.surface,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                title: Text(item.name),
-                                subtitle: Row(
+                                title: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                subtitle: Wrap(
                                   children: [
-                                    Text('Qtd: ${item.quantity}'),
+                                    Text(
+                                      'Qtd: ${item.quantity}',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
+                                    ),
                                     const SizedBox(width: 12),
                                     Text(
-                                        'R\$ ${item.price.toStringAsFixed(2)}'),
+                                      'R\$ ${item.price.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
+                                    ),
                                     const SizedBox(width: 12),
                                     Text(
-                                        'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}'),
+                                      'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 trailing: IconButton(
@@ -209,7 +257,10 @@ class CartPage extends StatelessWidget {
                                         : Icons.star_border,
                                     color: item.isFavorite
                                         ? Colors.amber
-                                        : Colors.grey,
+                                        : Theme.of(context)
+                                            .iconTheme
+                                            .color
+                                            ?.withAlpha(153),
                                   ),
                                   onPressed: () {
                                     Provider.of<ShoppingListModel>(context,

@@ -6,6 +6,7 @@ import '../models/shopping_list.dart';
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
+import '../providers/theme_provider.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -121,6 +122,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
         return Scaffold(
           appBar: AppBar(
             title: const Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   'Lembra AÍ',
@@ -140,6 +142,23 @@ class _ShoppingListPageState extends State<ShoppingListPage>
             ),
             centerTitle: true,
             actions: [
+              // Botão alternar tema
+              IconButton(
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                  color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Theme.of(context).colorScheme.onPrimary,
+                ),
+                tooltip: 'Alternar tema',
+                onPressed: () {
+                  Provider.of<ThemeProvider>(context, listen: false)
+                      .toggleMode();
+                },
+              ),
+
+              // Busca
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: _showSearch ? 220 : 48,
@@ -150,11 +169,21 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         child: TextField(
                           controller: _searchCtrl,
                           autofocus: true,
-                          decoration: const InputDecoration(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          decoration: InputDecoration(
                             hintText: 'Buscar...',
+                            hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimary
+                                  .withAlpha(178),
+                            ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
                           ),
                           onChanged: (query) {
                             setState(() => _searchQuery = query);
@@ -162,8 +191,11 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         ),
                       ),
                     IconButton(
-                      icon: Icon(_showSearch ? Icons.close : Icons.search,
-                          color: Colors.white),
+                      icon: Icon(
+                        _showSearch ? Icons.close : Icons.search,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
+                      ),
                       onPressed: () {
                         setState(() {
                           if (_showSearch) {
@@ -178,8 +210,10 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                 ),
               ),
             ],
+
+            // Barra inferior
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
+              preferredSize: const Size.fromHeight(56),
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -190,23 +224,72 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         model.isAsc
                             ? Icons.sort_by_alpha
                             : Icons.sort_by_alpha_outlined,
-                        color: Colors.white,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
                       ),
+                      tooltip: 'Ordenar lista',
                       onPressed: model.toggleSort,
                     ),
+
+                    // Centraliza o orçamento
                     Expanded(
-                      child: Text(
-                        'Orçamento: ${currency.format(model.budget)}',
-                        style: const TextStyle(color: Colors.white),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () => _showBudgetDialog(context, model),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white10
+                                  : Colors.blueAccent.withAlpha(
+                                      178), // mais visível no light
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet,
+                                  size: 18,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white70
+                                      : Colors
+                                          .white, // ícone mais visível no light
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'Orçamento: ${currency.format(model.budget)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.white, // texto mais visível
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
+
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.white),
-                      onPressed: () => _showBudgetDialog(context, model),
-                    ),
                   ],
                 ),
               ),
@@ -372,22 +455,49 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                           visualDensity: const VisualDensity(vertical: -4),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
-                          tileColor: Colors.white,
+                          tileColor: Theme.of(context)
+                              .colorScheme
+                              .surface, // se adapta ao tema
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           title: GestureDetector(
                             onTap: () =>
                                 _showEditNameDialog(context, model, item),
-                            child: Text(item.name),
+                            child: Text(
+                              item.name,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
                           ),
-                          subtitle: Row(
+                          subtitle: Wrap(
                             children: [
-                              Text('Qtd: ${item.quantity}'),
+                              Text(
+                                'Qtd: ${item.quantity}',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
+                              ),
                               const SizedBox(width: 12),
-                              Text(currency.format(item.price)),
+                              Text(
+                                currency.format(item.price),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
+                              ),
                               const SizedBox(width: 12),
-                              Text(currency.format(item.quantity * item.price)),
+                              Text(
+                                currency.format(item.quantity * item.price),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary, // destaca o total
+                                ),
+                              ),
                             ],
                           ),
                           trailing: Row(
@@ -399,8 +509,12 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                       ? Icons.star
                                       : Icons.star_border,
                                   color: item.isFavorite
-                                      ? Colors.amber
-                                      : Colors.grey,
+                                      ? Colors
+                                          .amber // mantém destaque no favorito
+                                      : Theme.of(context)
+                                          .iconTheme
+                                          .color
+                                          ?.withAlpha(153),
                                 ),
                                 onPressed: () {
                                   Provider.of<ShoppingListModel>(context,
@@ -409,7 +523,13 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit, size: 20),
+                                icon: Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: Theme.of(context)
+                                      .iconTheme
+                                      .color, // pega do tema
+                                ),
                                 onPressed: () =>
                                     _showEditItemDialog(context, model, item),
                               ),
@@ -429,6 +549,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
   }
 
   void _add(ShoppingListModel model) {
+    FocusScope.of(context).unfocus();
     final name = _nameCtrl.text.trim();
     final qty = int.tryParse(_qtyCtrl.text) ?? 1;
     if (name.isEmpty) return;

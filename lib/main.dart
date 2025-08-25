@@ -11,6 +11,7 @@ import 'providers/shopping_list_model.dart';
 import 'screens/shopping_list_page.dart';
 import 'screens/cart_tab.dart';
 import 'screens/favorites_page.dart';
+import 'providers/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +34,11 @@ Future<void> main() async {
   await listsProvider.loadLists();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => listsProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => listsProvider),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()), // ADICIONADO
+      ],
       child: const MyApp(),
     ),
   );
@@ -45,11 +49,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       title: 'Lembra AÍ',
       debugShowCheckedModeBanner: false,
       theme: elegantTheme,
-      home: const ListsMenuPage(), // Tela inicial: menu de listas
+      darkTheme: elegantDarkTheme,
+      themeMode: themeProvider.mode,
+      home: const ListsMenuPage(),
     );
   }
 }
