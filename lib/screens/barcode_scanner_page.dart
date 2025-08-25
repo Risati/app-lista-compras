@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:provider/provider.dart';
 import '../services/barcode_service.dart';
 import '../providers/shopping_list_model.dart';
+import '../models/shopping_list.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
-  const BarcodeScannerPage({super.key});
+  final ShoppingList list;
+  final ShoppingListModel model;
+  const BarcodeScannerPage({
+    super.key,
+    required this.list,
+    required this.model,
+  });
 
   @override
   State<BarcodeScannerPage> createState() => _BarcodeScannerPageState();
@@ -13,38 +19,51 @@ class BarcodeScannerPage extends StatefulWidget {
 
 class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
   bool _isProcessing = false;
+  MobileScannerController controller = MobileScannerController();
 
   void _handleBarcode(String code) async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
-    final product = await BarcodeService.fetchProduct(code);
-    if (!mounted) return; // <-- evita uso de BuildContext inválido
+    try {
+      final product = await BarcodeService.fetchProduct(code);
+      if (!mounted) return;
 
-    // Adicionando o nome do produto + marca
-    // E.g. Creme de Leite Leve UHT - Mococa
-    String name = code;
-    if (product != null) {
-      if (product.name != null && product.brand != null) {
-        name = '${product.name} - ${product.brand}';
-      } else {
-        name = product.name ?? product.brand ?? code;
+      String name = code;
+      if (product != null) {
+        if (product.name != null && product.brand != null) {
+          name = '${product.name} - ${product.brand}';
+        } else {
+          name = product.name ?? product.brand ?? code;
+        }
+      }
+
+      widget.model.addQuick(name, 1);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Adicionado: $name')),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao processar o código: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
     }
-
-    Provider.of<ShoppingListModel>(context, listen: false).addQuick(name, 1);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Adicionado: $name')),
-    );
-
-    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escanear código')),
+      appBar: AppBar(
+        title: const Text('Escanear código'),
+        // Remove todo o actions: []
+      ),
       body: Stack(
         children: [
           MobileScanner(
@@ -54,8 +73,11 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
             },
           ),
           if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(),
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
             ),
         ],
       ),

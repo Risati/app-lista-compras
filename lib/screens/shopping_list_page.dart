@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/shopping_list.dart';
-
 import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
 import 'barcode_scanner_page.dart';
 import '../providers/reports_provider.dart';
 import 'reports_page.dart';
+import '../providers/theme_provider.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -17,7 +17,8 @@ class ShoppingListPage extends StatefulWidget {
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
 
-class _ShoppingListPageState extends State<ShoppingListPage> {
+class _ShoppingListPageState extends State<ShoppingListPage>
+    with SingleTickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController(text: '1');
   String _searchQuery = '';
@@ -123,6 +124,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
         return Scaffold(
           appBar: AppBar(
             title: const Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   'Lembra AÍ',
@@ -143,6 +145,23 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             centerTitle: true,
             actions: [
               // AnimatedContainer só com a busca
+              // Botão alternar tema
+              IconButton(
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                  color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Theme.of(context).colorScheme.onPrimary,
+                ),
+                tooltip: 'Alternar tema',
+                onPressed: () {
+                  Provider.of<ThemeProvider>(context, listen: false)
+                      .toggleMode();
+                },
+              ),
+
+              // Busca
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: _showSearch ? 220 : 48,
@@ -153,19 +172,32 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         child: TextField(
                           controller: _searchCtrl,
                           autofocus: true,
-                          decoration: const InputDecoration(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          decoration: InputDecoration(
                             hintText: 'Buscar...',
+                            hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimary
+                                  .withAlpha(178),
+                            ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
                           ),
                           onChanged: (query) =>
                               setState(() => _searchQuery = query),
                         ),
                       ),
                     IconButton(
-                      icon: Icon(_showSearch ? Icons.close : Icons.search,
-                          color: Colors.white),
+                      icon: Icon(
+                        _showSearch ? Icons.close : Icons.search,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
+                      ),
                       onPressed: () {
                         setState(() {
                           if (_showSearch) {
@@ -179,66 +211,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   ],
                 ),
               ),
-
-              // Ícone para abrir relatórios (fora do AnimatedContainer)
-              IconButton(
-                icon: const Icon(Icons.insert_chart, color: Colors.white),
-                tooltip: 'Ver relatórios',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ReportsListPage()),
-                ),
-              ),
-
-              // Ícone Concluir compra (fora do AnimatedContainer)
-              IconButton(
-                icon: const Icon(Icons.check, color: Colors.white),
-                tooltip: 'Concluir compra',
-                onPressed: () async {
-                  final model = context.read<ShoppingListModel>();
-                  final reports = context.read<ReportsProvider>();
-                  final messenger =
-                      ScaffoldMessenger.of(context); // capture antes do await
-
-                  final marketName = await showDialog<String>(
-                    context: context,
-                    builder: (ctx) {
-                      final ctl = TextEditingController();
-                      return AlertDialog(
-                        title: const Text('Nome do Mercado'),
-                        content: TextField(
-                            controller: ctl,
-                            decoration: const InputDecoration(
-                                hintText: 'Nome do mercado')),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(),
-                              child: const Text('Cancelar')),
-                          TextButton(
-                              onPressed: () =>
-                                  Navigator.of(ctx).pop(ctl.text.trim()),
-                              child: const Text('OK')),
-                        ],
-                      );
-                    },
-                  );
-                  if (!mounted) return;
-                  if (marketName == null || marketName.isEmpty) return;
-
-                  final report =
-                      reports.generateFromModel(model, marketName: marketName);
-                  await reports.saveReport(report);
-                  if (!mounted) return;
-
-                  messenger.showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Relatório salvo — Total: ${report.total.toStringAsFixed(2)}')),
-                  );
-                },
-              ),
             ],
+
+            // Barra inferior
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
+              preferredSize: const Size.fromHeight(56),
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -249,35 +226,90 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         model.isAsc
                             ? Icons.sort_by_alpha
                             : Icons.sort_by_alpha_outlined,
-                        color: Colors.white,
+                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                            Theme.of(context).colorScheme.onPrimary,
                       ),
+                      tooltip: 'Ordenar lista',
                       onPressed: model.toggleSort,
                     ),
-                    const Spacer(),
+
+                    // Centraliza o orçamento
                     Expanded(
-                      child: Text(
-                        'Orçamento: ${currency.format(model.budget)}',
-                        style: const TextStyle(color: Colors.white),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () => _showBudgetDialog(context, model),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white10
+                                  : Colors.blueAccent.withAlpha(
+                                      178), // mais visível no light
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet,
+                                  size: 18,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white70
+                                      : Colors
+                                          .white, // ícone mais visível no light
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'Orçamento: ${currency.format(model.budget)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.white, // texto mais visível
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
+
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.white),
-                      onPressed: () => _showBudgetDialog(context, model),
-                    ),
                   ],
                 ),
               ),
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            tooltip: 'Escanear código de barras',
-            heroTag: 'scan_fab',
-            child: const Icon(Icons.qr_code_scanner),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BarcodeScannerPage()),
+          floatingActionButton: Consumer<ShoppingListModel>(
+            builder: (context, model, _) => FloatingActionButton(
+              tooltip: 'Escanear código de barras',
+              heroTag: 'scan_fab',
+              child: const Icon(Icons.qr_code_scanner),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BarcodeScannerPage(
+                    list: widget.list,
+                    model: model, // Usa o modelo do Consumer
+                  ),
+                ),
+              ),
             ),
           ),
           body: Column(
@@ -392,83 +424,119 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   separatorBuilder: (_, __) => const SizedBox(height: 4),
                   itemBuilder: (_, i) {
                     final item = filtered[i];
-                    return Card(
-                      child: ListTile(
-                        visualDensity: const VisualDensity(vertical: -4),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        title: GestureDetector(
-                          onTap: () =>
-                              _showEditNameDialog(context, model, item),
-                          child: Text(item.name),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Text('Qtd: ${item.quantity}'),
-                            const SizedBox(width: 12),
-                            Text(currency.format(item.price)),
-                            const SizedBox(width: 12),
-                            Text(currency.format(item.quantity * item.price)),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                item.isFavorite
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: item.isFavorite
-                                    ? Colors.amber
-                                    : Colors.grey,
+                    return Dismissible(
+                      key: ValueKey(item.name + item.quantity.toString()),
+                      background: Container(
+                        color: Colors.green,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 24),
+                        child: const Icon(Icons.check,
+                            color: Colors.white, size: 32),
+                      ),
+                      secondaryBackground: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 24),
+                        child: const Icon(Icons.delete,
+                            color: Colors.white, size: 32),
+                      ),
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          // Swipe para a direita: marcar como comprado
+                          model.togglePurchased(item);
+                          return false; // Não remove visualmente, só marca
+                        } else if (direction == DismissDirection.endToStart) {
+                          // Swipe para a esquerda: remover sem confirmação
+                          model.remove(item);
+                          return true;
+                        }
+                        return false;
+                      },
+                      child: Card(
+                        child: ListTile(
+                          visualDensity: const VisualDensity(vertical: -4),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          tileColor: Theme.of(context)
+                              .colorScheme
+                              .surface, // se adapta ao tema
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          title: GestureDetector(
+                            onTap: () =>
+                                _showEditNameDialog(context, model, item),
+                            child: Text(
+                              item.name,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
-                              onPressed: () {
-                                Provider.of<ShoppingListModel>(context,
-                                        listen: false)
-                                    .toggleFavorite(item);
-                              },
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () =>
-                                  _showEditItemDialog(context, model, item),
-                            ),
-                            IconButton(
-                              icon:
-                                  const Icon(Icons.add_shopping_cart_outlined),
-                              onPressed: () => model.togglePurchased(item),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  color: Colors.redAccent),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text('Remover item'),
-                                    content: Text(
-                                        'Deseja remover "${item.name}" da lista?'),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text('Cancelar')),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: const Text('Remover')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) model.remove(item);
-                              },
-                            ),
-                          ],
+                          ),
+                          subtitle: Wrap(
+                            children: [
+                              Text(
+                                'Qtd: ${item.quantity}',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                currency.format(item.price),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                currency.format(item.quantity * item.price),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary, // destaca o total
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  item.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: item.isFavorite
+                                      ? Colors
+                                          .amber // mantém destaque no favorito
+                                      : Theme.of(context)
+                                          .iconTheme
+                                          .color
+                                          ?.withAlpha(153),
+                                ),
+                                onPressed: () {
+                                  Provider.of<ShoppingListModel>(context,
+                                          listen: false)
+                                      .toggleFavorite(item);
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: Theme.of(context)
+                                      .iconTheme
+                                      .color, // pega do tema
+                                ),
+                                onPressed: () =>
+                                    _showEditItemDialog(context, model, item),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -483,6 +551,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   void _add(ShoppingListModel model) {
+    FocusScope.of(context).unfocus();
     final name = _nameCtrl.text.trim();
     final qty = int.tryParse(_qtyCtrl.text) ?? 1;
     if (name.isEmpty) return;
