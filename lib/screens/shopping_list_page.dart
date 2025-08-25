@@ -208,7 +208,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
 
             // Barra inferior
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
+              preferredSize: const Size.fromHeight(56),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -224,31 +224,66 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                       tooltip: 'Ordenar lista',
                       onPressed: model.toggleSort,
                     ),
+
+                    // Centraliza o orçamento
                     Expanded(
-                      child: Text(
-                        'Orçamento: ${currency.format(model.budget)}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.w500,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () => _showBudgetDialog(context, model),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white10
+                                  : Colors.blueAccent.withOpacity(0.7), // mais visível no light
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet,
+                                  size: 18,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white70
+                                      : Colors.white, // ícone mais visível no light
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'Orçamento: ${currency.format(model.budget)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.white, // texto mais visível
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
                       ),
                     ),
+
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: Icon(
-                        Icons.edit,
-                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
-                            Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      tooltip: 'Editar orçamento',
-                      onPressed: () => _showBudgetDialog(context, model),
-                    ),
                   ],
                 ),
               ),
             ),
+
+
           ),
 
           floatingActionButton: Consumer<ShoppingListModel>(
@@ -423,7 +458,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                               ),
                             ),
                           ),
-                          subtitle: Row(
+                          subtitle: Wrap(
                             children: [
                               Text(
                                 'Qtd: ${item.quantity}',
