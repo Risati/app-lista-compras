@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../services/barcode_service.dart';
-import '../providers/shopping_list_model.dart';
+import '../providers/lists_provider.dart';
 import '../models/shopping_list.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
   final ShoppingList list;
-  final ShoppingListModel model;
+  final ListsProvider model; // Mudou de provider para model
+
   const BarcodeScannerPage({
     super.key,
     required this.list,
-    required this.model,
+    required this.model, // Mudou de provider para model
   });
 
   @override
@@ -38,8 +39,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
         }
       }
 
-      widget.model.addQuick(name, 1);
-
+      widget.model.addItemToList(widget.list, name, 1);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Adicionado: $name')),
       );

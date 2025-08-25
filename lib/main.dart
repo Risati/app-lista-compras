@@ -4,40 +4,36 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'models/shopping_list.dart';
 import 'providers/lists_provider.dart';
 import 'screens/lists_menu_page.dart';
-
-import 'theme.dart';
+import '../core/theme/app_theme.dart';
 import 'models/grocery_item.dart';
-import 'providers/shopping_list_model.dart';
 import 'screens/shopping_list_page.dart';
 import 'screens/cart_tab.dart';
 import 'screens/favorites_page.dart';
 import 'providers/theme_provider.dart';
+import 'providers/report_provider.dart';
+import 'core/theme/colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializa Hive
   await Hive.initFlutter();
-
-  // Registra os adapters antes de abrir as boxes
   Hive.registerAdapter(GroceryItemAdapter());
   Hive.registerAdapter(ShoppingListAdapter());
 
-  // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
   await Hive.openBox('settings');
   await Hive.openBox<GroceryItem>('favorites_box');
   await Hive.openBox<ShoppingList>('lists_box');
 
-  // Inicializa o provider de listas e carrega as listas
   final listsProvider = ListsProvider();
-  await listsProvider.loadLists();
+  await listsProvider.init();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => listsProvider),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()), // ADICIONADO
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => ReportProvider()),
       ],
       child: const MyApp(),
     ),
@@ -53,8 +49,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Lembra AÍ',
       debugShowCheckedModeBanner: false,
-      theme: elegantTheme,
-      darkTheme: elegantDarkTheme,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
       themeMode: themeProvider.mode,
       home: const ListsMenuPage(),
     );
@@ -78,18 +74,9 @@ class _AppTabsState extends State<AppTabs> {
   void initState() {
     super.initState();
     _pages = [
-      ChangeNotifierProvider(
-        create: (_) => ShoppingListModel(widget.list),
-        child: ShoppingListPage(list: widget.list),
-      ),
-      ChangeNotifierProvider(
-        create: (_) => ShoppingListModel(widget.list),
-        child: CartPage(list: widget.list),
-      ),
-      ChangeNotifierProvider(
-        create: (_) => ShoppingListModel(widget.list),
-        child: FavoritesPage(list: widget.list),
-      ),
+      ShoppingListPage(list: widget.list),
+      CartPage(list: widget.list),
+      FavoritesPage(list: widget.list),
     ];
   }
 
@@ -99,9 +86,9 @@ class _AppTabsState extends State<AppTabs> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: secondaryColor,
+        selectedItemColor: AppColors.secondary,
         unselectedItemColor: Colors.white70,
-        backgroundColor: primaryColor,
+        backgroundColor: AppColors.primary,
         onTap: (i) => setState(() => _currentIndex = i),
         items: const [
           BottomNavigationBarItem(

@@ -1,55 +1,388 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../core/constants/strings.dart';
+import '../core/constants/dimensions.dart';
+import '../core/utils/formatters.dart';
 import '../models/shopping_list.dart';
-import '../providers/shopping_list_model.dart';
 import '../models/grocery_item.dart';
-import 'barcode_scanner_page.dart';
+import '../providers/lists_provider.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/cards/shopping_info_card.dart';
+import '../widgets/cards/shopping_item_card.dart';
+import '../widgets/inputs/search_field.dart';
+import '../widgets/inputs/currency_field.dart';
+import '../widgets/dialogs/confirm_dialog.dart';
+import 'barcode_scanner_page.dart';
+import '../core/theme/text_styles.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
   const ShoppingListPage({super.key, required this.list});
+
   @override
   State<ShoppingListPage> createState() => _ShoppingListPageState();
 }
 
-class _ShoppingListPageState extends State<ShoppingListPage>
-    with SingleTickerProviderStateMixin {
+class _ShoppingListPageState extends State<ShoppingListPage> {
   final _nameCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController(text: '1');
+  final _searchCtrl = TextEditingController();
   String _searchQuery = '';
   bool _showSearch = false;
-  final _searchCtrl = TextEditingController();
-  final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-  // Formatter que formata enquanto digita (1 -> R$ 0,01 ; 1050 -> R$ 10,50)
-  final TextInputFormatter currencyFormatter =
-      TextInputFormatter.withFunction((oldValue, newValue) {
-    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return const TextEditingValue(text: '');
-    final value = int.parse(digits);
-    final formatted = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
-        .format(value / 100);
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+  @override
+  Widget build(BuildContext context) {
+    final listsProvider = Provider.of<ListsProvider>(context);
+    final isAscending = listsProvider.isListAscending(widget.list);
+    final budget = listsProvider.getBudget();
+    final total = listsProvider.getListTotal(widget.list);
+    final totalGasto = listsProvider.getListPurchasedTotal(widget.list);
+    final itensRestantes = listsProvider.getRemainingItems(widget.list);
+    final filtered = listsProvider
+        .getAvailableItems(widget.list)
+        .where((item) =>
+            item.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+
+    return Scaffold(
+      appBar: _buildAppBar(
+        context,
+        listsProvider,
+        isAscending,
+        budget,
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: Strings.tooltipScanBarcode,
+        heroTag: 'scan_fab',
+        child: const Icon(Icons.qr_code_scanner),
+        onPressed: () => _openBarcodeScanner(context, listsProvider),
+      ),
+      body: Column(
+        children: [
+          ShoppingInfoCard(
+            total: total,
+            spent: totalGasto,
+            remaining: itensRestantes,
+          ),
+          _buildAddItemRow(listsProvider),
+          Expanded(
+            child: _buildItemsList(filtered, listsProvider),
+          ),
+        ],
+      ),
     );
-  });
+  }
 
-  void _showEditItemDialog(
-      BuildContext context, ShoppingListModel model, GroceryItem item) {
-    final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final priceCtrl = TextEditingController(text: currency.format(item.price));
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    ListsProvider provider,
+    bool isAscending,
+    double budget,
+  ) {
+    return AppBar(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            Strings.appName,
+            style: AppTextStyles.titleMedium(context),
+          ),
+          Text(
+            Strings.appSubtitle,
+            style: AppTextStyles.titleSmall(context),
+          ),
+        ],
+      ),
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: Icon(
+            Theme.of(context).brightness == Brightness.dark
+                ? Icons.light_mode
+                : Icons.dark_mode,
+          ),
+          tooltip: Strings.tooltipToggleTheme,
+          onPressed: () {
+            Provider.of<ThemeProvider>(context, listen: false).toggleMode();
+          },
+        ),
+        if (provider.isListComplete(widget.list))
+          IconButton(
+            icon: const Icon(Icons.task_alt),
+            tooltip: Strings.tooltipFinishList,
+            onPressed: () =>
+                _showFinishListDialog(context, provider), // Passa o provider
+          ),
+        SearchField(
+          controller: _searchCtrl,
+          isVisible: _showSearch,
+          onChanged: (query) => setState(() => _searchQuery = query),
+          onClear: () {
+            setState(() {
+              if (_showSearch) {
+                _searchQuery = '';
+                _searchCtrl.clear();
+              }
+              _showSearch = !_showSearch;
+            });
+          },
+        ),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.paddingL,
+            vertical: Dimensions.paddingS,
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  isAscending
+                      ? Icons.sort_by_alpha
+                      : Icons.sort_by_alpha_outlined,
+                ),
+                tooltip: Strings.tooltipSortList,
+                onPressed: () => provider.toggleListSort(widget.list),
+              ),
+              Expanded(
+                child: _buildBudgetButton(context, provider, budget),
+              ),
+              const SizedBox(width: Dimensions.paddingS),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBudgetButton(
+    BuildContext context,
+    ListsProvider provider,
+    double budget,
+  ) {
+    return GestureDetector(
+      onTap: () => _showBudgetDialog(context, provider),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Dimensions.paddingL,
+          vertical: Dimensions.paddingXS,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white10
+              : Colors.blueAccent.withAlpha(178),
+          borderRadius: BorderRadius.circular(Dimensions.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.account_balance_wallet,
+              size: Dimensions.iconS,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.white,
+            ),
+            const SizedBox(width: Dimensions.paddingXS),
+            Flexible(
+              child: Text(
+                '${Strings.labelBudget}: ${Formatters.currency(budget)}',
+                style: AppTextStyles.bodyLarge(context)
+                    .copyWith(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddItemRow(ListsProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.all(Dimensions.paddingL),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(
+                hintText: Strings.labelProduct,
+              ),
+              onSubmitted: (_) => _add(provider),
+            ),
+          ),
+          const SizedBox(width: Dimensions.paddingS),
+          SizedBox(
+            width: 60,
+            child: TextField(
+              controller: _qtyCtrl,
+              decoration: const InputDecoration(
+                hintText: Strings.labelQuantity,
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onSubmitted: (_) => _add(provider),
+            ),
+          ),
+          const SizedBox(width: Dimensions.paddingS),
+          SizedBox(
+            width: Dimensions.buttonHeight,
+            height: Dimensions.buttonHeight,
+            child: ElevatedButton(
+              onPressed: () => _add(provider),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemsList(List<GroceryItem> items, ListsProvider provider) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(Dimensions.paddingS),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: Dimensions.paddingXS),
+      itemBuilder: (_, i) {
+        final item = items[i];
+        return Dismissible(
+          key: ValueKey(item.name + item.quantity.toString()),
+          background: Container(
+            color: Colors.green,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: Dimensions.paddingXL),
+            child: const Icon(Icons.check,
+                color: Colors.white, size: Dimensions.iconXL),
+          ),
+          secondaryBackground: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: Dimensions.paddingXL),
+            child: const Icon(Icons.delete,
+                color: Colors.white, size: Dimensions.iconXL),
+          ),
+          confirmDismiss: (direction) =>
+              _handleDismiss(direction, item, provider),
+          child: ShoppingItemCard(
+            item: item,
+            onEdit: () => _showEditItemDialog(context, provider, item),
+            onEditName: () => _showEditNameDialog(context, provider, item),
+            onFavorite: () => provider.toggleFavorite(item),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _handleDismiss(
+    DismissDirection direction,
+    GroceryItem item,
+    ListsProvider provider,
+  ) async {
+    if (direction == DismissDirection.startToEnd) {
+      provider.toggleItemPurchased(widget.list, item);
+      return false;
+    } else if (direction == DismissDirection.endToStart) {
+      provider.removeItemFromList(widget.list, item);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _showFinishListDialog(
+      BuildContext context, ListsProvider provider) async {
+    final confirm = await ConfirmDialog.show(
+      context: context,
+      title: Strings.dialogFinishList,
+      message: Strings.dialogConfirmFinish,
+      confirmText: Strings.btnFinish,
+      cancelText: Strings.btnNotYet,
+      confirmColor: Colors.green,
+    );
+
+    if (confirm == true) {
+      await provider
+          .completeList(widget.list); // Usa o provider passado como parâmetro
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(Strings.msgListCompleted),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _showBudgetDialog(BuildContext context, ListsProvider provider) {
+    final ctrl = TextEditingController(
+      text: Formatters.currency(provider.getBudget()),
+    );
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Editar item'),
+        title: const Text(Strings.dialogAdjustBudget),
+        content: CurrencyField(
+          controller: ctrl,
+          onChanged: (value) {
+            provider.updateBudget(value);
+            Navigator.of(context).pop();
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(Strings.btnCancel),
+          ),
+          TextButton(
+            onPressed: () {
+              final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final value = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+              provider.updateBudget(value);
+              Navigator.of(context).pop();
+            },
+            child: const Text(Strings.btnSave),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditItemDialog(
+    BuildContext context,
+    ListsProvider provider,
+    GroceryItem item,
+  ) {
+    final qtyCtrl = TextEditingController(text: item.quantity.toString());
+    final priceCtrl = TextEditingController(
+      text: Formatters.currency(item.price),
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text(Strings.dialogEditItem),
         content: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            padding: const EdgeInsets.symmetric(
+              vertical: Dimensions.paddingS,
+              horizontal: Dimensions.paddingXS,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -58,23 +391,18 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
-                    labelText: 'Quantidade',
+                    labelText: Strings.labelQuantity,
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: Dimensions.paddingM,
+                      vertical: Dimensions.paddingS,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
+                const SizedBox(height: Dimensions.paddingM),
+                CurrencyField(
                   controller: priceCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [currencyFormatter],
-                  decoration: const InputDecoration(
-                    labelText: 'Preço',
-                    isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  ),
+                  labelText: Strings.labelPrice,
                 ),
               ],
             ),
@@ -82,505 +410,23 @@ class _ShoppingListPageState extends State<ShoppingListPage>
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(Strings.btnCancel),
+          ),
           TextButton(
             onPressed: () {
-              final q = int.tryParse(qtyCtrl.text) ?? item.quantity;
+              final quantity = int.tryParse(qtyCtrl.text) ?? item.quantity;
               final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final p = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              model.updateItem(item, qty: q, price: p);
+              final price = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+              provider.updateItem(
+                widget.list,
+                item,
+                quantity: quantity,
+                price: price,
+              );
               Navigator.of(context).pop();
             },
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ShoppingListModel>(
-      builder: (_, model, __) {
-        final total = model.items.fold<double>(
-          0.0,
-          (sum, item) => sum + (item.price * item.quantity),
-        );
-        final totalGasto = model.items
-            .where((item) => item.purchased)
-            .fold<double>(
-                0.0, (sum, item) => sum + (item.price * item.quantity));
-        final itensRestantes =
-            model.items.where((item) => !item.purchased).length;
-
-        final filtered = model.available
-            .where((item) =>
-                item.name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Lembra AÍ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 19,
-                  ),
-                ),
-                Text(
-                  'Listas de Compras',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-            centerTitle: true,
-            actions: [
-              // Botão alternar tema
-              IconButton(
-                icon: Icon(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Icons.light_mode
-                      : Icons.dark_mode,
-                  color: Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Theme.of(context).colorScheme.onPrimary,
-                ),
-                tooltip: 'Alternar tema',
-                onPressed: () {
-                  Provider.of<ThemeProvider>(context, listen: false)
-                      .toggleMode();
-                },
-              ),
-
-              // Busca
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: _showSearch ? 220 : 48,
-                child: Row(
-                  children: [
-                    if (_showSearch)
-                      Expanded(
-                        child: TextField(
-                          controller: _searchCtrl,
-                          autofocus: true,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Buscar...',
-                            hintStyle: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimary
-                                  .withAlpha(178),
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                          onChanged: (query) {
-                            setState(() => _searchQuery = query);
-                          },
-                        ),
-                      ),
-                    IconButton(
-                      icon: Icon(
-                        _showSearch ? Icons.close : Icons.search,
-                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
-                            Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          if (_showSearch) {
-                            _searchQuery = '';
-                            _searchCtrl.clear();
-                          }
-                          _showSearch = !_showSearch;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Barra inferior
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(56),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        model.isAsc
-                            ? Icons.sort_by_alpha
-                            : Icons.sort_by_alpha_outlined,
-                        color: Theme.of(context).appBarTheme.iconTheme?.color ??
-                            Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      tooltip: 'Ordenar lista',
-                      onPressed: model.toggleSort,
-                    ),
-
-                    // Centraliza o orçamento
-                    Expanded(
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () => _showBudgetDialog(context, model),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white10
-                                  : Colors.blueAccent.withAlpha(
-                                      178), // mais visível no light
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(25),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.account_balance_wallet,
-                                  size: 18,
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white70
-                                      : Colors
-                                          .white, // ícone mais visível no light
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    'Orçamento: ${currency.format(model.budget)}',
-                                    style: TextStyle(
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.white70
-                                          : Colors.white, // texto mais visível
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          floatingActionButton: Consumer<ShoppingListModel>(
-            builder: (context, model, _) => FloatingActionButton(
-              tooltip: 'Escanear código de barras',
-              heroTag: 'scan_fab',
-              child: const Icon(Icons.qr_code_scanner),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BarcodeScannerPage(
-                    list: widget.list,
-                    model: model, // Usa o modelo do Consumer
-                  ),
-                ),
-              ),
-            ),
-          ),
-          body: Column(
-            children: [
-              Card(
-                margin: const EdgeInsets.all(12),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          const Icon(Icons.shopping_cart, color: Colors.blue),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Total',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            currency.format(total),
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green[700]),
-                          const SizedBox(height: 4),
-                          const Text('Gasto',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                            currency.format(totalGasto),
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Icon(Icons.pending_actions,
-                              color: Colors.orange[700]),
-                          const SizedBox(height: 4),
-                          const Text('Restantes',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                            '$itensRestantes',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.orange[700],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: TextField(
-                        controller: _nameCtrl,
-                        decoration: const InputDecoration(
-                          hintText: 'Produto',
-                        ),
-                        onSubmitted: (_) => _add(model),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: _qtyCtrl,
-                        decoration: const InputDecoration(
-                          hintText: 'Qtd',
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        onSubmitted: (_) => _add(model),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () => _add(model),
-                        child: const Icon(Icons.add,
-                            color: Colors.white, size: 24),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 4),
-                  itemBuilder: (_, i) {
-                    final item = filtered[i];
-                    return Dismissible(
-                      key: ValueKey(item.name + item.quantity.toString()),
-                      background: Container(
-                        color: Colors.green,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 24),
-                        child: const Icon(Icons.check,
-                            color: Colors.white, size: 32),
-                      ),
-                      secondaryBackground: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 24),
-                        child: const Icon(Icons.delete,
-                            color: Colors.white, size: 32),
-                      ),
-                      confirmDismiss: (direction) async {
-                        if (direction == DismissDirection.startToEnd) {
-                          // Swipe para a direita: marcar como comprado
-                          model.togglePurchased(item);
-                          return false; // Não remove visualmente, só marca
-                        } else if (direction == DismissDirection.endToStart) {
-                          // Swipe para a esquerda: remover sem confirmação
-                          model.remove(item);
-                          return true;
-                        }
-                        return false;
-                      },
-                      child: Card(
-                        child: ListTile(
-                          visualDensity: const VisualDensity(vertical: -4),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          tileColor: Theme.of(context)
-                              .colorScheme
-                              .surface, // se adapta ao tema
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          title: GestureDetector(
-                            onTap: () =>
-                                _showEditNameDialog(context, model, item),
-                            child: Text(
-                              item.name,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          subtitle: Wrap(
-                            children: [
-                              Text(
-                                'Qtd: ${item.quantity}',
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                currency.format(item.price),
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                currency.format(item.quantity * item.price),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary, // destaca o total
-                                ),
-                              ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  item.isFavorite
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: item.isFavorite
-                                      ? Colors
-                                          .amber // mantém destaque no favorito
-                                      : Theme.of(context)
-                                          .iconTheme
-                                          .color
-                                          ?.withAlpha(153),
-                                ),
-                                onPressed: () {
-                                  Provider.of<ShoppingListModel>(context,
-                                          listen: false)
-                                      .toggleFavorite(item);
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.edit,
-                                  size: 20,
-                                  color: Theme.of(context)
-                                      .iconTheme
-                                      .color, // pega do tema
-                                ),
-                                onPressed: () =>
-                                    _showEditItemDialog(context, model, item),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _add(ShoppingListModel model) {
-    FocusScope.of(context).unfocus();
-    final name = _nameCtrl.text.trim();
-    final qty = int.tryParse(_qtyCtrl.text) ?? 1;
-    if (name.isEmpty) return;
-    model.addQuick(name, qty);
-    _nameCtrl.clear();
-    _qtyCtrl.text = '1';
-  }
-
-  void _showBudgetDialog(BuildContext context, ShoppingListModel model) {
-    final ctrl = TextEditingController(text: currency.format(model.budget));
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Ajustar Orçamento'),
-        content: TextField(
-          controller: ctrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [currencyFormatter],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () {
-              final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final v = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              model.updateBudget(v);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Salvar'),
+            child: const Text(Strings.btnSave),
           ),
         ],
       ),
@@ -588,31 +434,57 @@ class _ShoppingListPageState extends State<ShoppingListPage>
   }
 
   void _showEditNameDialog(
-      BuildContext context, ShoppingListModel model, GroceryItem item) {
+    BuildContext context,
+    ListsProvider provider,
+    GroceryItem item,
+  ) {
     final ctrl = TextEditingController(text: item.name);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Editar Nome'),
+        title: const Text(Strings.dialogEditName),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(labelText: 'Nome'),
+          decoration: const InputDecoration(labelText: Strings.labelName),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(Strings.btnCancel),
+          ),
           TextButton(
             onPressed: () {
               final newName = ctrl.text.trim();
               if (newName.isNotEmpty) {
-                model.updateItem(item, name: newName);
+                provider.updateItem(widget.list, item, name: newName);
               }
               Navigator.of(context).pop();
             },
-            child: const Text('Salvar'),
+            child: const Text(Strings.btnSave),
           ),
         ],
+      ),
+    );
+  }
+
+  void _add(ListsProvider provider) {
+    FocusScope.of(context).unfocus();
+    final name = _nameCtrl.text.trim();
+    final qty = int.tryParse(_qtyCtrl.text) ?? 1;
+    if (name.isEmpty) return;
+
+    provider.addItemToList(widget.list, name, qty);
+    _nameCtrl.clear();
+    _qtyCtrl.text = '1';
+  }
+
+  void _openBarcodeScanner(BuildContext context, ListsProvider provider) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BarcodeScannerPage(
+          list: widget.list,
+          model: provider,
+        ),
       ),
     );
   }

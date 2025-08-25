@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/shopping_list_model.dart';
+import '../providers/lists_provider.dart';
 import '../models/shopping_list.dart';
+import '../core/theme/text_styles.dart';
+import '../core/constants/strings.dart';
 
 class FavoritesPage extends StatelessWidget {
   final ShoppingList list;
@@ -9,26 +11,23 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<ShoppingListModel>();
+    final model = context.watch<ListsProvider>();
     final favorites = model.favorites;
 
     if (favorites.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('Favoritos')),
         body: Center(
-          child: Text(
-            'Nenhum favorito ainda.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(178),
-            ),
-          ),
+          child: Text(Strings.msgNoFavorites,
+              style: AppTextStyles.bodyMedium(context).copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(178),
+              )),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favoritos')),
+      appBar: AppBar(title: const Text(Strings.titleFavorites)),
       body: ListView.separated(
         itemCount: favorites.length,
         padding: const EdgeInsets.all(12),
@@ -67,10 +66,9 @@ class FavoritesPage extends StatelessWidget {
               if (direction == DismissDirection.startToEnd) {
                 // Evita duplicados
                 final alreadyInList =
-                    model.items.any((i) => i.name == item.name);
-
+                    list.items.any((i) => i.name == item.name);
                 if (!alreadyInList) {
-                  model.addFavoriteToList(item);
+                  model.addFavoriteToList(list, item);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('"${item.name}" adicionado à lista!'),
@@ -118,22 +116,15 @@ class FavoritesPage extends StatelessWidget {
               child: ListTile(
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: Text(
-                  item.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  'Qtd: ${item.quantity}',
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withAlpha(178),
-                  ),
-                ),
+                title: Text(item.name,
+                    style: AppTextStyles.bodyLarge(context)
+                        .copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Qtd: ${item.quantity}',
+                    style: AppTextStyles.bodyMedium(context).copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withAlpha(178))),
                 trailing: IconButton(
                   icon: Icon(
                     item.isFavorite ? Icons.star : Icons.star_border,
