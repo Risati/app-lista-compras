@@ -190,7 +190,7 @@ class CartPage extends StatelessWidget {
                                     color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
-                                subtitle: Row(
+                                subtitle: Wrap(
                                   children: [
                                     Text(
                                       'Qtd: ${item.quantity}',

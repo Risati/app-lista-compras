@@ -519,6 +519,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
   }
 
   void _add(ShoppingListModel model) {
+    FocusScope.of(context).unfocus(); 
     final name = _nameCtrl.text.trim();
     final qty = int.tryParse(_qtyCtrl.text) ?? 1;
     if (name.isEmpty) return;
