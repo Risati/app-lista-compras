@@ -58,54 +58,64 @@ class CartPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildInfoColumn(
-              context,
-              icon: Icons.account_balance_wallet,
-              iconColor: AppColors.primary,
-              label: Strings.labelBudget,
-              value: Formatters.currency(budget),
+            Column(
+              children: [
+                const Icon(Icons.account_balance_wallet, color: Colors.blue),
+                const SizedBox(height: Dimensions.paddingXS),
+                Text(
+                  Strings.labelBudget,
+                  style: AppTextStyles.bodyMedium(context)
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  Formatters.currency(budget),
+                  style: AppTextStyles.bodyLarge(context)
+                      .copyWith(fontSize: 16, fontWeight: FontWeight.normal),
+                ),
+              ],
             ),
-            _buildInfoColumn(
-              context,
-              icon: Icons.account_balance_wallet,
-              iconColor: AppColors.primary,
-              label: Strings.labelBudget,
-              value: Formatters.currency(budget),
+            Column(
+              children: [
+                const Icon(Icons.shopping_cart_checkout,
+                    color: AppColors.success),
+                const SizedBox(height: Dimensions.paddingXS),
+                Text(
+                  Strings.labelSpent,
+                  style: AppTextStyles.bodyMedium(context)
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  Formatters.currency(totalGasto),
+                  style: AppTextStyles.bodyLarge(context).copyWith(
+                    fontSize: 16,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            _buildInfoColumn(
-              context,
-              icon: Icons.account_balance_wallet,
-              iconColor: AppColors.primary,
-              label: Strings.labelBudget,
-              value: Formatters.currency(budget),
+            Column(
+              children: [
+                const Icon(Icons.account_balance, color: AppColors.warning),
+                const SizedBox(height: Dimensions.paddingXS),
+                Text(
+                  Strings.labelRemaining,
+                  style: AppTextStyles.bodyMedium(context)
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  Formatters.currency(remaining),
+                  style: AppTextStyles.bodyLarge(context).copyWith(
+                    fontSize: 16,
+                    color: remaining >= 0 ? AppColors.warning : AppColors.error,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoColumn(
-    BuildContext context, {
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: iconColor),
-        const SizedBox(height: Dimensions.paddingXS),
-        Text(label, style: AppTextStyles.label(context)),
-        Text(
-          value,
-          style: AppTextStyles.bodyLarge(context).copyWith(
-            color: valueColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 
