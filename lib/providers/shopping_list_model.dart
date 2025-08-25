@@ -46,7 +46,14 @@ class ShoppingListModel extends ChangeNotifier {
   double get remaining => budget - total;
 
   void addQuick(String name, int qty) {
-    final item = GroceryItem(name: name, quantity: qty);
+    final item = GroceryItem(
+      name: name,
+      quantity: qty,
+      price: 0.0,
+      purchased: false,
+      isFavorite: false,
+      category: null,
+    );
     items.add(item);
     _sort();
     list.save();
