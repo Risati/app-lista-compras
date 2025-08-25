@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../models/shopping_list.dart';
 import '../models/grocery_item.dart';
+import 'package:diacritic/diacritic.dart';
 
 class ListsProvider extends ChangeNotifier {
   late Box<ShoppingList> _listsBox;
@@ -134,7 +135,9 @@ class ListsProvider extends ChangeNotifier {
 
   void toggleListSort(ShoppingList list) {
     final key = 'list_${list.key}_ascending';
-    _settings.put(key, !isListAscending(list));
+    final newAscending = !isListAscending(list);
+    _settings.put(key, newAscending);
+    sortList(list, ascending: newAscending); // aplica a ordenação
     notifyListeners();
   }
 
@@ -190,9 +193,11 @@ class ListsProvider extends ChangeNotifier {
 
   // Ordenação
   void sortList(ShoppingList list, {bool ascending = true}) {
-    list.items.sort(
-      (a, b) => ascending ? a.name.compareTo(b.name) : b.name.compareTo(a.name),
-    );
+    list.items.sort((a, b) {
+      final an = removeDiacritics(a.name).toLowerCase();
+      final bn = removeDiacritics(b.name).toLowerCase();
+      return ascending ? an.compareTo(bn) : bn.compareTo(an);
+    });
     list.save();
     notifyListeners();
   }
