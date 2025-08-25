@@ -42,7 +42,8 @@ class CartPage extends StatelessWidget {
                     children: [
                       Column(
                         children: [
-                          const Icon(Icons.account_balance_wallet, color: Colors.blue),
+                          const Icon(Icons.account_balance_wallet,
+                              color: Colors.blue),
                           const SizedBox(height: 4),
                           const Text(
                             'Orçamento',
@@ -56,7 +57,8 @@ class CartPage extends StatelessWidget {
                       ),
                       Column(
                         children: [
-                          Icon(Icons.shopping_cart_checkout, color: Colors.green[700]),
+                          Icon(Icons.shopping_cart_checkout,
+                              color: Colors.green[700]),
                           const SizedBox(height: 4),
                           const Text('Gasto',
                               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -72,7 +74,8 @@ class CartPage extends StatelessWidget {
                       ),
                       Column(
                         children: [
-                          Icon(Icons.account_balance, color: Colors.orange[700]),
+                          Icon(Icons.account_balance,
+                              color: Colors.orange[700]),
                           const SizedBox(height: 4),
                           const Text('Restante',
                               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -80,7 +83,9 @@ class CartPage extends StatelessWidget {
                             currency.format(remaining),
                             style: TextStyle(
                               fontSize: 16,
-                              color: remaining >= 0 ? Colors.orange[700] : Colors.red,
+                              color: remaining >= 0
+                                  ? Colors.orange[700]
+                                  : Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -101,7 +106,8 @@ class CartPage extends StatelessWidget {
                           if (i == cart.length) {
                             // Botão no final da lista
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                               child: SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton.icon(
@@ -110,8 +116,11 @@ class CartPage extends StatelessWidget {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    textStyle: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -119,28 +128,38 @@ class CartPage extends StatelessWidget {
                                   onPressed: cart.isEmpty
                                       ? null
                                       : () async {
-                                          final confirm = await showDialog<bool>(
+                                          final confirm =
+                                              await showDialog<bool>(
                                             context: context,
                                             builder: (_) => AlertDialog(
-                                              title: const Text('Finalizar compra'),
-                                              content: const Text('Deseja limpar todo o carrinho?'),
+                                              title: const Text(
+                                                  'Finalizar compra'),
+                                              content: const Text(
+                                                  'Deseja limpar todo o carrinho?'),
                                               actions: [
                                                 TextButton(
-                                                  onPressed: () => Navigator.pop(context, false),
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, false),
                                                   child: const Text('Cancelar'),
                                                 ),
                                                 TextButton(
-                                                  onPressed: () => Navigator.pop(context, true),
-                                                  child: const Text('Finalizar'),
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, true),
+                                                  child:
+                                                      const Text('Finalizar'),
                                                 ),
                                               ],
                                             ),
                                           );
                                           if (confirm == true) {
                                             model.clearCart();
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
                                               const SnackBar(
-                                                content: Text('Carrinho limpo com sucesso!'),
+                                                content: Text(
+                                                    'Carrinho limpo com sucesso!'),
                                                 duration: Duration(seconds: 2),
                                               ),
                                             );
@@ -158,19 +177,22 @@ class CartPage extends StatelessWidget {
                               color: Colors.orange,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.only(left: 24),
-                              child: const Icon(Icons.undo, color: Colors.white, size: 32),
+                              child: const Icon(Icons.undo,
+                                  color: Colors.white, size: 32),
                             ),
                             secondaryBackground: Container(
                               color: Colors.red,
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: 24),
-                              child: const Icon(Icons.delete, color: Colors.white, size: 32),
+                              child: const Icon(Icons.delete,
+                                  color: Colors.white, size: 32),
                             ),
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
                                 model.togglePurchased(item);
                                 return false;
-                              } else if (direction == DismissDirection.endToStart) {
+                              } else if (direction ==
+                                  DismissDirection.endToStart) {
                                 model.remove(item);
                                 return true;
                               }
@@ -178,48 +200,66 @@ class CartPage extends StatelessWidget {
                             },
                             child: Card(
                               child: ListTile(
-                                visualDensity: const VisualDensity(vertical: -4),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                tileColor: Theme.of(context).colorScheme.surface,
+                                visualDensity:
+                                    const VisualDensity(vertical: -4),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                tileColor:
+                                    Theme.of(context).colorScheme.surface,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 title: Text(
                                   item.name,
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                                 subtitle: Wrap(
                                   children: [
                                     Text(
                                       'Qtd: ${item.quantity}',
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       'R\$ ${item.price.toStringAsFixed(2)}',
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       'Total: R\$ ${(item.quantity * item.price).toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                     ),
                                   ],
                                 ),
                                 trailing: IconButton(
                                   icon: Icon(
-                                    item.isFavorite ? Icons.star : Icons.star_border,
+                                    item.isFavorite
+                                        ? Icons.star
+                                        : Icons.star_border,
                                     color: item.isFavorite
                                         ? Colors.amber
-                                        : Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                                        : Theme.of(context)
+                                            .iconTheme
+                                            .color
+                                            ?.withOpacity(0.6),
                                   ),
                                   onPressed: () {
-                                    Provider.of<ShoppingListModel>(context, listen: false)
+                                    Provider.of<ShoppingListModel>(context,
+                                            listen: false)
                                         .toggleFavorite(item);
                                   },
                                 ),

@@ -36,19 +36,19 @@ class ListsMenuPage extends StatelessWidget {
           ],
         ),
         actions: [
-        IconButton(
-          icon: Icon(
-            Theme.of(context).brightness == Brightness.dark
-                ? Icons.light_mode
-                : Icons.dark_mode,
-            color: Colors.white,
+          IconButton(
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+              color: Colors.white,
+            ),
+            tooltip: 'Alternar tema',
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleMode();
+            },
           ),
-          tooltip: 'Alternar tema',
-          onPressed: () {
-            Provider.of<ThemeProvider>(context, listen: false).toggleMode();
-          },
-        ),
-      ],
+        ],
       ),
       body: listsProvider.lists.isEmpty
           ? const Center(child: Text('Nenhuma lista criada'))
@@ -66,13 +66,17 @@ class ListsMenuPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    color: Theme.of(context).colorScheme.surface, // cor do card adaptada ao tema
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surface, // cor do card adaptada ao tema
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         child: Icon(
                           _getIconForList(list.name),
-                          color: Theme.of(context).colorScheme.onPrimary, // contraste automático
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimary, // contraste automático
                         ),
                       ),
                       title: Text(
@@ -90,7 +94,8 @@ class ListsMenuPage extends StatelessWidget {
                                 color: Theme.of(context).colorScheme.secondary),
                             tooltip: 'Renomear lista',
                             onPressed: () async {
-                              final newName = await _showRenameDialog(context, list.name);
+                              final newName =
+                                  await _showRenameDialog(context, list.name);
                               if (newName != null && newName.isNotEmpty) {
                                 await listsProvider.renameList(list, newName);
                               }
@@ -110,11 +115,13 @@ class ListsMenuPage extends StatelessWidget {
                                   ),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
                                       child: const Text('Cancelar'),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
                                       child: const Text('Excluir'),
                                     ),
                                   ],

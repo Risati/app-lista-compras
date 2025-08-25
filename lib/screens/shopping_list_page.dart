@@ -123,7 +123,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
           appBar: AppBar(
             title: const Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: const [
+              children: [
                 Text(
                   'Lembra AÍ',
                   style: TextStyle(
@@ -153,7 +153,8 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                 ),
                 tooltip: 'Alternar tema',
                 onPressed: () {
-                  Provider.of<ThemeProvider>(context, listen: false).toggleMode();
+                  Provider.of<ThemeProvider>(context, listen: false)
+                      .toggleMode();
                 },
               ),
 
@@ -174,11 +175,15 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                           decoration: InputDecoration(
                             hintText: 'Buscar...',
                             hintStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimary
+                                  .withOpacity(0.7),
                             ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
                           ),
                           onChanged: (query) {
                             setState(() => _searchQuery = query);
@@ -210,7 +215,8 @@ class _ShoppingListPageState extends State<ShoppingListPage>
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(56),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -231,11 +237,14 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                         child: GestureDetector(
                           onTap: () => _showBudgetDialog(context, model),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
                                   ? Colors.white10
-                                  : Colors.blueAccent.withOpacity(0.7), // mais visível no light
+                                  : Colors.blueAccent.withOpacity(
+                                      0.7), // mais visível no light
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -251,16 +260,19 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                 Icon(
                                   Icons.account_balance_wallet,
                                   size: 18,
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white70
-                                      : Colors.white, // ícone mais visível no light
+                                      : Colors
+                                          .white, // ícone mais visível no light
                                 ),
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
                                     'Orçamento: ${currency.format(model.budget)}',
                                     style: TextStyle(
-                                      color: Theme.of(context).brightness == Brightness.dark
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
                                           ? Colors.white70
                                           : Colors.white, // texto mais visível
                                       fontWeight: FontWeight.bold,
@@ -282,10 +294,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                 ),
               ),
             ),
-
-
           ),
-
           floatingActionButton: Consumer<ShoppingListModel>(
             builder: (context, model, _) => FloatingActionButton(
               tooltip: 'Escanear código de barras',
@@ -444,13 +453,17 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                       child: Card(
                         child: ListTile(
                           visualDensity: const VisualDensity(vertical: -4),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          tileColor: Theme.of(context).colorScheme.surface, // se adapta ao tema
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          tileColor: Theme.of(context)
+                              .colorScheme
+                              .surface, // se adapta ao tema
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           title: GestureDetector(
-                            onTap: () => _showEditNameDialog(context, model, item),
+                            onTap: () =>
+                                _showEditNameDialog(context, model, item),
                             child: Text(
                               item.name,
                               style: TextStyle(
@@ -462,19 +475,27 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                             children: [
                               Text(
                                 'Qtd: ${item.quantity}',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 currency.format(item.price),
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 currency.format(item.quantity * item.price),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary, // destaca o total
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary, // destaca o total
                                 ),
                               ),
                             ],
@@ -484,13 +505,20 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  item.isFavorite ? Icons.star : Icons.star_border,
+                                  item.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
                                   color: item.isFavorite
-                                      ? Colors.amber // mantém destaque no favorito
-                                      : Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                                      ? Colors
+                                          .amber // mantém destaque no favorito
+                                      : Theme.of(context)
+                                          .iconTheme
+                                          .color
+                                          ?.withOpacity(0.6),
                                 ),
                                 onPressed: () {
-                                  Provider.of<ShoppingListModel>(context, listen: false)
+                                  Provider.of<ShoppingListModel>(context,
+                                          listen: false)
                                       .toggleFavorite(item);
                                 },
                               ),
@@ -498,15 +526,17 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                 icon: Icon(
                                   Icons.edit,
                                   size: 20,
-                                  color: Theme.of(context).iconTheme.color, // pega do tema
+                                  color: Theme.of(context)
+                                      .iconTheme
+                                      .color, // pega do tema
                                 ),
-                                onPressed: () => _showEditItemDialog(context, model, item),
+                                onPressed: () =>
+                                    _showEditItemDialog(context, model, item),
                               ),
                             ],
                           ),
                         ),
                       ),
-
                     );
                   },
                 ),
@@ -519,7 +549,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
   }
 
   void _add(ShoppingListModel model) {
-    FocusScope.of(context).unfocus(); 
+    FocusScope.of(context).unfocus();
     final name = _nameCtrl.text.trim();
     final qty = int.tryParse(_qtyCtrl.text) ?? 1;
     if (name.isEmpty) return;
