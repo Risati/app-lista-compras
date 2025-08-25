@@ -154,6 +154,11 @@ class CartPage extends StatelessWidget {
                                             ),
                                           );
                                           if (confirm == true) {
+                                            // Guardar o context antes da operação
+                                            // e verificar se ainda está montado
+                                            // Evita async gaps
+                                            if (!context.mounted) return;
+
                                             model.clearCart();
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(
@@ -255,7 +260,7 @@ class CartPage extends StatelessWidget {
                                         : Theme.of(context)
                                             .iconTheme
                                             .color
-                                            ?.withOpacity(0.6),
+                                            ?.withAlpha(153),
                                   ),
                                   onPressed: () {
                                     Provider.of<ShoppingListModel>(context,

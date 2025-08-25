@@ -20,7 +20,7 @@ class FavoritesPage extends StatelessWidget {
             'Nenhum favorito ainda.',
             style: TextStyle(
               fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(178),
             ),
           ),
         ),
@@ -131,7 +131,7 @@ class FavoritesPage extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.7),
+                        .withAlpha(178),
                   ),
                 ),
                 trailing: IconButton(
@@ -139,7 +139,7 @@ class FavoritesPage extends StatelessWidget {
                     item.isFavorite ? Icons.star : Icons.star_border,
                     color: item.isFavorite
                         ? Colors.amber
-                        : Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                        : Theme.of(context).iconTheme.color?.withAlpha(153),
                   ),
                   onPressed: () => model.toggleFavorite(item),
                 ),

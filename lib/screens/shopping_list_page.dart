@@ -178,7 +178,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                               color: Theme.of(context)
                                   .colorScheme
                                   .onPrimary
-                                  .withOpacity(0.7),
+                                  .withAlpha(178),
                             ),
                             border: InputBorder.none,
                             isDense: true,
@@ -243,12 +243,12 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.white10
-                                  : Colors.blueAccent.withOpacity(
-                                      0.7), // mais visível no light
+                                  : Colors.blueAccent.withAlpha(
+                                      178), // mais visível no light
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withAlpha(25),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -514,7 +514,7 @@ class _ShoppingListPageState extends State<ShoppingListPage>
                                       : Theme.of(context)
                                           .iconTheme
                                           .color
-                                          ?.withOpacity(0.6),
+                                          ?.withAlpha(153),
                                 ),
                                 onPressed: () {
                                   Provider.of<ShoppingListModel>(context,
