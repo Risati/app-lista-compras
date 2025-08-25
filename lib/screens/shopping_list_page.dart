@@ -338,11 +338,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       builder: (_) => AlertDialog(
         title: const Text(Strings.dialogAdjustBudget),
         content: CurrencyField(
-          controller: ctrl,
-          onChanged: (value) {
-            provider.updateBudget(value);
-            Navigator.of(context).pop();
-          },
+          controller: ctrl, // sem onChanged que fecha automaticamente
         ),
         actions: [
           TextButton(

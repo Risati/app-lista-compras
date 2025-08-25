@@ -11,6 +11,7 @@ import '../widgets/dialogs/confirm_dialog.dart';
 import '../models/grocery_item.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../core/theme/text_styles.dart';
+import '../widgets/inputs/currency_field.dart';
 
 class CartPage extends StatelessWidget {
   final ShoppingList list;
@@ -32,7 +33,8 @@ class CartPage extends StatelessWidget {
           ),
           body: Column(
             children: [
-              _buildSummaryCard(context, budget, totalGasto, remaining),
+              _buildSummaryCard(
+                  context, provider, budget, totalGasto, remaining),
               Expanded(
                 child: cart.isEmpty
                     ? const Center(child: Text(Strings.msgEmptyCart))
@@ -46,7 +48,12 @@ class CartPage extends StatelessWidget {
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, budget, double totalGasto, double remaining) {
+    BuildContext context,
+    ListsProvider provider,
+    double budget,
+    double totalGasto,
+    double remaining,
+  ) {
     return Card(
       margin: const EdgeInsets.all(Dimensions.paddingM),
       elevation: 4,
@@ -58,21 +65,24 @@ class CartPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Column(
-              children: [
-                const Icon(Icons.account_balance_wallet, color: Colors.blue),
-                const SizedBox(height: Dimensions.paddingXS),
-                Text(
-                  Strings.labelBudget,
-                  style: AppTextStyles.bodyMedium(context)
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  Formatters.currency(budget),
-                  style: AppTextStyles.bodyLarge(context)
-                      .copyWith(fontSize: 16, fontWeight: FontWeight.normal),
-                ),
-              ],
+            GestureDetector(
+              onTap: () => _showBudgetDialog(context, provider),
+              child: Column(
+                children: [
+                  const Icon(Icons.account_balance_wallet, color: Colors.blue),
+                  const SizedBox(height: Dimensions.paddingXS),
+                  Text(
+                    Strings.labelBudget,
+                    style: AppTextStyles.bodyMedium(context)
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    Formatters.currency(budget),
+                    style: AppTextStyles.bodyLarge(context)
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.normal),
+                  ),
+                ],
+              ),
             ),
             Column(
               children: [
@@ -320,6 +330,37 @@ class CartPage extends StatelessWidget {
                 provider.updateItem(list, item, name: newName);
               }
               Navigator.pop(context);
+            },
+            child: const Text(Strings.btnSave),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBudgetDialog(BuildContext context, ListsProvider provider) {
+    final ctrl = TextEditingController(
+      text: Formatters.currency(provider.getBudget()),
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text(Strings.dialogAdjustBudget),
+        content: CurrencyField(
+          controller: ctrl,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(Strings.btnCancel),
+          ),
+          TextButton(
+            onPressed: () {
+              final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final value = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+              provider.updateBudget(value);
+              Navigator.of(context).pop();
             },
             child: const Text(Strings.btnSave),
           ),
