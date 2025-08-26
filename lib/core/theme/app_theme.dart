@@ -8,6 +8,7 @@ class AppTheme {
         useMaterial3: true,
         colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
+          onPrimary: AppColors.textLight,
           secondary: AppColors.secondary,
           surface: AppColors.surface,
           onSurface: AppColors.textPrimary,
@@ -24,10 +25,15 @@ class AppTheme {
           centerTitle: true,
           iconTheme: const IconThemeData(
             color: AppColors.textLight,
+            size: Dimensions.iconL,
+          ),
+          actionsIconTheme: const IconThemeData(
+            color: AppColors.textLight,
+            size: Dimensions.iconL,
           ),
         ),
         iconTheme: const IconThemeData(
-          color: AppColors.primary,
+          color: Color.fromARGB(225, 255, 255, 255),
           size: Dimensions.iconL,
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -62,9 +68,8 @@ class AppTheme {
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColors
-              .primary, // ou null para deixar o FAB usar colorScheme.primary
-          foregroundColor: AppColors.textLight, // texto/ícone do FAB
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.textLight,
         ),
       );
 
@@ -72,6 +77,7 @@ class AppTheme {
         useMaterial3: true,
         colorScheme: const ColorScheme.dark(
           primary: AppColors.primary,
+          onPrimary: AppColors.textLight,
           secondary: AppColors.secondary,
           surface: AppColors.darkSurface,
           onSurface: AppColors.textLight,
@@ -88,10 +94,15 @@ class AppTheme {
           centerTitle: true,
           iconTheme: const IconThemeData(
             color: AppColors.textLight,
+            size: Dimensions.iconL,
+          ),
+          actionsIconTheme: const IconThemeData(
+            color: AppColors.textLight,
+            size: Dimensions.iconL,
           ),
         ),
         iconTheme: const IconThemeData(
-          color: AppColors.secondary,
+          color: AppColors.textLight,
           size: Dimensions.iconL,
         ),
         inputDecorationTheme: InputDecorationTheme(
