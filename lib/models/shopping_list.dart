@@ -11,5 +11,22 @@ class ShoppingList extends HiveObject {
   @HiveField(1)
   List<GroceryItem> items;
 
-  ShoppingList({required this.name, required this.items});
+  @HiveField(2)
+  bool isCompleted; // Este campo existe mas não está sendo setado corretamente
+
+  @HiveField(3)
+  DateTime?
+      completedAt; // Este campo existe mas não está sendo setado corretamente
+
+  ShoppingList({
+    required this.name,
+    required this.items,
+    this.isCompleted = false,
+    this.completedAt,
+  });
+
+  void complete() {
+    isCompleted = true;
+    completedAt = DateTime.now();
+  }
 }

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lista_elegante/theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/lists_provider.dart';
-import '../main.dart'; // Para AppTabs
+import '../main.dart';
 import '../providers/theme_provider.dart';
+import '../models/shopping_list_report.dart';
+import '../providers/report_provider.dart';
+import 'package:open_file/open_file.dart';
+import '../models/shopping_list.dart';
+import '../core/theme/colors.dart';
+import '../core/theme/text_styles.dart';
+import '../core/constants/strings.dart';
 
 class ListsMenuPage extends StatelessWidget {
   const ListsMenuPage({super.key});
@@ -14,25 +20,14 @@ class ListsMenuPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: AppColors.primary,
         centerTitle: true,
         elevation: 4,
-        title: const Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Lembra AÍ',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-              ),
-            ),
-            Text(
-              'Listas de Compras',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-              ),
-            ),
+            Text(Strings.appName, style: AppTextStyles.titleMedium(context)),
+            Text(Strings.appSubtitle, style: AppTextStyles.titleSmall(context)),
           ],
         ),
         actions: [
@@ -50,114 +45,50 @@ class ListsMenuPage extends StatelessWidget {
           ),
         ],
       ),
-      body: listsProvider.lists.isEmpty
-          ? const Center(child: Text('Nenhuma lista criada'))
-          : ListView.builder(
-              itemCount: listsProvider.lists.length,
-              itemBuilder: (_, i) {
-                final list = listsProvider.lists[i];
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surface, // cor do card adaptada ao tema
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: Icon(
-                          _getIconForList(list.name),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimary, // contraste automático
-                        ),
-                      ),
-                      title: Text(
-                        list.name,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.edit,
-                                color: Theme.of(context).colorScheme.secondary),
-                            tooltip: 'Renomear lista',
-                            onPressed: () async {
-                              final newName =
-                                  await _showRenameDialog(context, list.name);
-                              if (newName != null && newName.isNotEmpty) {
-                                await listsProvider.renameList(list, newName);
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete,
-                                color: Theme.of(context).colorScheme.error),
-                            tooltip: 'Excluir lista',
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Excluir lista?'),
-                                  content: Text(
-                                    'Tem certeza que deseja excluir "${list.name}"?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Excluir'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await listsProvider.removeList(list);
-                              }
-                            },
-                          ),
-                          Icon(Icons.arrow_forward_ios,
-                              color: Theme.of(context).colorScheme.primary),
-                        ],
-                      ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => AppTabs(list: list),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
+      // AQUI COMEÇA A MUDANÇA PRINCIPAL - Novo body com tabs
+      body: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            Container(
+              color: AppColors.primary,
+              child: const TabBar(
+                labelColor: Colors.white,
+                tabs: [
+                  Tab(text: Strings.titleActiveList),
+                  Tab(text: Strings.titleCompletedLists),
+                ],
+              ),
             ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  // Tab de listas ativas
+                  listsProvider.activeLists.isEmpty
+                      ? const Center(child: Text(Strings.msgNoActiveList))
+                      : _buildListView(listsProvider.activeLists),
+
+                  // Tab de listas concluídas
+                  listsProvider.completedLists.isEmpty
+                      ? const Center(child: Text(Strings.msgNoCompletedLists))
+                      : _buildListView(listsProvider.completedLists),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
+          final provider = Provider.of<ListsProvider>(context, listen: false);
           final name = await _showNewListDialog(context);
           if (name != null && name.isNotEmpty) {
-            await listsProvider.addList(name);
+            await provider.addList(name);
+            if (!context.mounted) return;
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('Criar'),
-        backgroundColor: primaryColor,
+        label: const Text(Strings.btnCreate),
         elevation: 6,
       ),
     );
@@ -195,6 +126,121 @@ class ListsMenuPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _generateReport(BuildContext context, ShoppingList list) async {
+    final report = ShoppingListReport.fromShoppingList(list);
+    final reportProvider = Provider.of<ReportProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context); // capturar antes do await
+
+    try {
+      final pdfPath = await reportProvider.generatePDF(report);
+      await OpenFile.open(pdfPath);
+    } catch (e) {
+      if (!context.mounted) return; // garante segurança antes de usar context
+      messenger.showSnackBar(
+        SnackBar(content: Text('Erro ao gerar relatório: $e')),
+      );
+    }
+  }
+
+  // NOVO MÉTODO - Contém o código da lista que estava no body
+  Widget _buildListView(List<ShoppingList> lists) {
+    return ListView.builder(
+      itemCount: lists.length,
+      itemBuilder: (context, i) {
+        final list = lists[i];
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            color: Theme.of(context).colorScheme.surface,
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: Icon(
+                  _getIconForList(list.name),
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+              title: Text(
+                list.name,
+                style: AppTextStyles.bodyLarge(context),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.assessment),
+                    onPressed: () => _generateReport(context, list),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit,
+                        color: Theme.of(context).colorScheme.secondary),
+                    tooltip: 'Renomear lista',
+                    onPressed: () async {
+                      final provider =
+                          Provider.of<ListsProvider>(context, listen: false);
+                      final newName =
+                          await _showRenameDialog(context, list.name);
+                      if (newName != null && newName.isNotEmpty) {
+                        await provider.renameList(list, newName);
+                        if (!context.mounted) return;
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete,
+                        color: Theme.of(context).colorScheme.error),
+                    tooltip: 'Excluir lista',
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Excluir lista?'),
+                          content: Text(
+                            'Tem certeza que deseja excluir "${list.name}"?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Excluir'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        if (!context.mounted) return;
+                        await Provider.of<ListsProvider>(context, listen: false)
+                            .removeList(list);
+                      }
+                    },
+                  ),
+                  Icon(Icons.arrow_forward_ios,
+                      color: Theme.of(context).colorScheme.primary),
+                ],
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => AppTabs(list: list),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
