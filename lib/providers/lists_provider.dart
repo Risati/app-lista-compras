@@ -201,4 +201,12 @@ class ListsProvider extends ChangeNotifier {
     list.save();
     notifyListeners();
   }
+
+  double getListBudget(ShoppingList list) => list.budget;
+
+  void updateListBudget(ShoppingList list, double value) {
+    list.budget = value;
+    list.save(); // persiste no Hive
+    notifyListeners();
+  }
 }

@@ -35,7 +35,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   Widget build(BuildContext context) {
     final listsProvider = Provider.of<ListsProvider>(context);
     final isAscending = listsProvider.isListAscending(widget.list);
-    final budget = listsProvider.getBudget();
+    final budget = listsProvider.getListBudget(widget.list);
     final total = listsProvider.getListTotal(widget.list);
     final totalGasto = listsProvider.getListPurchasedTotal(widget.list);
     final itensRestantes = listsProvider.getRemainingItems(widget.list);
@@ -330,7 +330,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
   void _showBudgetDialog(BuildContext context, ListsProvider provider) {
     final ctrl = TextEditingController(
-      text: Formatters.currency(provider.getBudget()),
+      text: Formatters.currency(provider.getListBudget(widget.list)),
     );
 
     showDialog(
@@ -349,7 +349,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             onPressed: () {
               final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
               final value = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              provider.updateBudget(value);
+              provider.updateListBudget(widget.list, value);
               Navigator.of(context).pop();
             },
             child: const Text(Strings.btnSave),
