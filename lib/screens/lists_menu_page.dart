@@ -27,9 +27,19 @@ class ListsMenuPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(Strings.appName, style: AppTextStyles.titleMedium(context)),
-            Text(Strings.appSubtitle, style: AppTextStyles.titleSmall(context)),
-          ],
+      Text(
+        Strings.appName,
+        style: AppTextStyles.titleSmall(context).copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+        )
+      ),
+      Text(
+        Strings.appSubtitle,
+        style: AppTextStyles.titleSmall(context).copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+      ),
+    ],
         ),
         actions: [
           IconButton(

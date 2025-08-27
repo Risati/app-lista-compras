@@ -84,15 +84,19 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            Strings.appName,
-            style: AppTextStyles.titleMedium(context),
-          ),
-          Text(
-            Strings.appSubtitle,
-            style: AppTextStyles.titleSmall(context),
-          ),
-        ],
+      Text(
+        Strings.appName,
+        style: AppTextStyles.titleSmall(context).copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+        )
+      ),
+      Text(
+        Strings.appSubtitle,
+        style: AppTextStyles.titleSmall(context).copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+      ),
+    ],
       ),
       centerTitle: true,
       actions: [
@@ -197,8 +201,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             Flexible(
               child: Text(
                 '${Strings.labelBudget}: ${Formatters.currency(budget)}',
-                style: AppTextStyles.bodyLarge(context)
-                    .copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.bodyLarge(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
