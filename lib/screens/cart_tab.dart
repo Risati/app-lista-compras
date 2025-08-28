@@ -13,6 +13,7 @@ import '../widgets/buttons/primary_button.dart';
 import '../core/theme/text_styles.dart';
 import '../widgets/inputs/currency_field.dart';
 
+
 class CartPage extends StatelessWidget {
   final ShoppingList list;
   const CartPage({super.key, required this.list});

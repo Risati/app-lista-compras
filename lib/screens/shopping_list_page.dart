@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../core/constants/strings.dart';
 import '../core/constants/dimensions.dart';
 import '../core/utils/formatters.dart';
@@ -124,6 +125,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               _showSearch = !_showSearch;
             });
           },
+        ),
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Compartilhar lista',
+          onPressed: () => _shareList(widget.list),
         ),
       ],
       bottom: PreferredSize(
@@ -483,5 +489,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
         ],
       ),
     );
+  }
+
+  void _shareList(ShoppingList list) {
+    final itemsText = list.items.isEmpty
+        ? 'Nenhum item na lista.'
+        : list.items.map((item) => '- ${item.name} (${item.quantity})').join('\n');
+    final text = 'Lista "${list.name}":\n$itemsText';
+    Share.share(text);
   }
 }
