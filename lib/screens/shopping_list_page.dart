@@ -140,6 +140,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   isAscending
                       ? Icons.sort_by_alpha
                       : Icons.sort_by_alpha_outlined,
+                      color: Theme.of(context).colorScheme.onPrimary,
                 ),
                 tooltip: Strings.tooltipSortList,
                 onPressed: () => provider.toggleListSort(widget.list),
@@ -181,7 +182,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           ],
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center, // Centraliza o conteúdo
           children: [
             Icon(
               Icons.account_balance_wallet,
@@ -200,6 +202,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
+                textAlign: TextAlign.center, // Garante centralização do texto
               ),
             ),
           ],
