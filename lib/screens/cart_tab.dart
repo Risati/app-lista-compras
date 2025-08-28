@@ -158,8 +158,7 @@ class CartPage extends StatelessWidget {
             icon: Icons.delete,
             alignment: Alignment.centerRight,
           ),
-          confirmDismiss: (direction) =>
-              _handleDismiss(direction, item, provider),
+          confirmDismiss: (direction) => _handleDismiss(direction, item, provider, list),
           child: ShoppingItemCard(
             item: item,
             onEdit: () => _showEditItemDialog(context, provider, item),
@@ -215,12 +214,13 @@ class CartPage extends StatelessWidget {
     DismissDirection direction,
     GroceryItem item,
     ListsProvider provider,
+    ShoppingList list,
   ) async {
     if (direction == DismissDirection.startToEnd) {
-      provider.togglePurchased(item);
+      provider.toggleItemPurchased(list, item); // usar toggleItemPurchased
       return false;
     } else if (direction == DismissDirection.endToStart) {
-      provider.remove(item);
+      provider.removeItemFromList(list, item); // remover do Hive
       return true;
     }
     return false;

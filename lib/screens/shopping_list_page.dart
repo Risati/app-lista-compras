@@ -15,6 +15,7 @@ import '../widgets/inputs/currency_field.dart';
 import '../widgets/dialogs/confirm_dialog.dart';
 import 'barcode_scanner_page.dart';
 import '../core/theme/text_styles.dart';
+import '../core/theme/colors.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -46,12 +47,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
         .toList();
 
     return Scaffold(
-      appBar: _buildAppBar(
-        context,
-        listsProvider,
-        isAscending,
-        budget,
-      ),
+      appBar: _buildAppBar(context, listsProvider, isAscending, budget),
       floatingActionButton: FloatingActionButton(
         tooltip: Strings.tooltipScanBarcode,
         heroTag: 'scan_fab',
@@ -75,28 +71,26 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   PreferredSizeWidget _buildAppBar(
-    BuildContext context,
-    ListsProvider provider,
-    bool isAscending,
-    double budget,
-  ) {
+      BuildContext context,
+      ListsProvider provider,
+      bool isAscending,
+      double budget,
+      ) {
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-      Text(
-        Strings.appName,
-        style: AppTextStyles.titleSmall(context).copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
-        )
-      ),
-      Text(
-        Strings.appSubtitle,
-        style: AppTextStyles.titleSmall(context).copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
-      ),
-    ],
+          Text(
+            Strings.appName,
+            style: AppTextStyles.titleSmall(context)
+                .copyWith(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          Text(
+            Strings.appSubtitle,
+            style: AppTextStyles.titleSmall(context)
+                .copyWith(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+        ],
       ),
       centerTitle: true,
       actions: [
@@ -115,8 +109,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           IconButton(
             icon: const Icon(Icons.task_alt),
             tooltip: Strings.tooltipFinishList,
-            onPressed: () =>
-                _showFinishListDialog(context, provider), // Passa o provider
+            onPressed: () => _showFinishListDialog(context, provider),
           ),
         SearchField(
           controller: _searchCtrl,
@@ -163,10 +156,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   Widget _buildBudgetButton(
-    BuildContext context,
-    ListsProvider provider,
-    double budget,
-  ) {
+      BuildContext context,
+      ListsProvider provider,
+      double budget,
+      ) {
     return GestureDetector(
       onTap: () => _showBudgetDialog(context, provider),
       child: Container(
@@ -265,20 +258,16 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       itemBuilder: (_, i) {
         final item = items[i];
         return Dismissible(
-          key: ValueKey(item.name + item.quantity.toString()),
-          background: Container(
-            color: Colors.green,
+          key: ValueKey('${item.name}_${item.quantity}'),
+          background: buildDismissBackground(
+            color: AppColors.warning,
+            icon: Icons.undo,
             alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.only(left: Dimensions.paddingXL),
-            child: const Icon(Icons.check,
-                color: Colors.white, size: Dimensions.iconXL),
           ),
-          secondaryBackground: Container(
-            color: Colors.red,
+          secondaryBackground: buildDismissBackground(
+            color: AppColors.error,
+            icon: Icons.delete,
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: Dimensions.paddingXL),
-            child: const Icon(Icons.delete,
-                color: Colors.white, size: Dimensions.iconXL),
           ),
           confirmDismiss: (direction) =>
               _handleDismiss(direction, item, provider),
@@ -293,11 +282,31 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
   }
 
+  Widget buildDismissBackground({
+    required Color color,
+    required IconData icon,
+    required Alignment alignment,
+  }) {
+    return Container(
+      color: color,
+      alignment: alignment,
+      padding: EdgeInsets.only(
+        left: alignment == Alignment.centerLeft ? Dimensions.paddingXL : 0,
+        right: alignment == Alignment.centerRight ? Dimensions.paddingXL : 0,
+      ),
+      child: Icon(
+        icon,
+        color: AppColors.textLight,
+        size: Dimensions.iconXL,
+      ),
+    );
+  }
+
   Future<bool> _handleDismiss(
-    DismissDirection direction,
-    GroceryItem item,
-    ListsProvider provider,
-  ) async {
+      DismissDirection direction,
+      GroceryItem item,
+      ListsProvider provider,
+      ) async {
     if (direction == DismissDirection.startToEnd) {
       provider.toggleItemPurchased(widget.list, item);
       return false;
@@ -306,6 +315,28 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       return true;
     }
     return false;
+  }
+
+  void _add(ListsProvider provider) {
+    FocusScope.of(context).unfocus();
+    final name = _nameCtrl.text.trim();
+    final qty = int.tryParse(_qtyCtrl.text) ?? 1;
+    if (name.isEmpty) return;
+
+    provider.addItemToList(widget.list, name, qty);
+    _nameCtrl.clear();
+    _qtyCtrl.text = '1';
+  }
+
+  void _openBarcodeScanner(BuildContext context, ListsProvider provider) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BarcodeScannerPage(
+          list: widget.list,
+          model: provider,
+        ),
+      ),
+    );
   }
 
   Future<void> _showFinishListDialog(
@@ -320,8 +351,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
 
     if (confirm == true) {
-      await provider
-          .completeList(widget.list); // Usa o provider passado como parâmetro
+      await provider.completeList(widget.list);
       if (!context.mounted) return;
       Navigator.of(context).pop();
       if (!context.mounted) return;
@@ -343,9 +373,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text(Strings.dialogAdjustBudget),
-        content: CurrencyField(
-          controller: ctrl, // sem onChanged que fecha automaticamente
-        ),
+        content: CurrencyField(controller: ctrl),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -366,14 +394,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   void _showEditItemDialog(
-    BuildContext context,
-    ListsProvider provider,
-    GroceryItem item,
-  ) {
+      BuildContext context, ListsProvider provider, GroceryItem item) {
     final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final priceCtrl = TextEditingController(
-      text: Formatters.currency(item.price),
-    );
+    final priceCtrl =
+        TextEditingController(text: Formatters.currency(item.price));
 
     showDialog(
       context: context,
@@ -395,10 +419,6 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   decoration: const InputDecoration(
                     labelText: Strings.labelQuantity,
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: Dimensions.paddingM,
-                      vertical: Dimensions.paddingS,
-                    ),
                   ),
                 ),
                 const SizedBox(height: Dimensions.paddingM),
@@ -420,12 +440,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               final quantity = int.tryParse(qtyCtrl.text) ?? item.quantity;
               final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
               final price = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              provider.updateItem(
-                widget.list,
-                item,
-                quantity: quantity,
-                price: price,
-              );
+              provider.updateItem(widget.list, item,
+                  quantity: quantity, price: price);
               Navigator.of(context).pop();
             },
             child: const Text(Strings.btnSave),
@@ -436,10 +452,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   void _showEditNameDialog(
-    BuildContext context,
-    ListsProvider provider,
-    GroceryItem item,
-  ) {
+      BuildContext context, ListsProvider provider, GroceryItem item) {
     final ctrl = TextEditingController(text: item.name);
     showDialog(
       context: context,
@@ -465,28 +478,6 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             child: const Text(Strings.btnSave),
           ),
         ],
-      ),
-    );
-  }
-
-  void _add(ListsProvider provider) {
-    FocusScope.of(context).unfocus();
-    final name = _nameCtrl.text.trim();
-    final qty = int.tryParse(_qtyCtrl.text) ?? 1;
-    if (name.isEmpty) return;
-
-    provider.addItemToList(widget.list, name, qty);
-    _nameCtrl.clear();
-    _qtyCtrl.text = '1';
-  }
-
-  void _openBarcodeScanner(BuildContext context, ListsProvider provider) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BarcodeScannerPage(
-          list: widget.list,
-          model: provider,
-        ),
       ),
     );
   }

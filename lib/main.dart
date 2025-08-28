@@ -17,14 +17,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+
+  // Registra os adapters
   Hive.registerAdapter(GroceryItemAdapter());
   Hive.registerAdapter(ShoppingListAdapter());
 
+  // Abre as boxes
   await Hive.openBox<GroceryItem>('grocery_box');
   await Hive.openBox('settings');
   await Hive.openBox<GroceryItem>('favorites_box');
   await Hive.openBox<ShoppingList>('lists_box');
 
+  // Inicializa provider das listas
   final listsProvider = ListsProvider();
   await listsProvider.init();
 
