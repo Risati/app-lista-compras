@@ -17,6 +17,7 @@ import '../widgets/dialogs/confirm_dialog.dart';
 import 'barcode_scanner_page.dart';
 import '../core/theme/text_styles.dart';
 import '../core/theme/colors.dart';
+import '../services/category_service.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -280,11 +281,20 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           ),
           confirmDismiss: (direction) =>
               _handleDismiss(direction, item, provider),
-          child: ShoppingItemCard(
-            item: item,
-            onEdit: () => _showEditItemDialog(context, provider, item),
-            onEditName: () => _showEditNameDialog(context, provider, item),
-            onFavorite: () => provider.toggleFavorite(item),
+          child: FutureBuilder<String>(
+            future: CategoryService.getCategoria(item.name),
+            builder: (context, snapshot) {
+              final categoria = snapshot.data ?? 'Outros';
+              final cor = CategoryService.getCorCategoria(categoria);
+              return ShoppingItemCard(
+                item: item,
+                categoria: categoria,
+                corCategoria: cor,
+                onEdit: () => _showEditItemDialog(context, provider, item),
+                onEditName: () => _showEditNameDialog(context, provider, item),
+                onFavorite: () => provider.toggleFavorite(item),
+              );
+            },
           ),
         );
       },
@@ -493,23 +503,22 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
   void _shareList(ShoppingList list) {
     final buffer = StringBuffer();
-  buffer.writeln('🛒 Lista: ${list.name}');
-  if (list.budget > 0) {
-    buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
-  }
-  buffer.writeln('Itens:');
-  if (list.items.isEmpty) {
-    buffer.writeln('- Nenhum item na lista.');
-  } else {
-    for (final item in list.items) {
-      final status = item.purchased == true ? '✅' : '⬜️';
-      buffer.writeln('$status ${item.name} (${item.quantity})');
+    buffer.writeln('🛒 Lista: ${list.name}');
+    if (list.budget > 0) {
+      buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
     }
+    buffer.writeln('Itens:');
+    if (list.items.isEmpty) {
+      buffer.writeln('- Nenhum item na lista.');
+    } else {
+      for (final item in list.items) {
+        final status = item.purchased == true ? '✅' : '⬜️';
+        buffer.writeln('$status ${item.name} (${item.quantity})');
+      }
+    }
+    // Adicionar um link para o app futuramente:
+    // buffer.writeln('\nBaixe o app: https://seulink.com');
+    Share.share(buffer.toString());
   }
-  // Se quiser, adicione um link para o app:
-  // buffer.writeln('\nBaixe o app: https://seulink.com');
-
-  Share.share(buffer.toString());
-}
 
 }
