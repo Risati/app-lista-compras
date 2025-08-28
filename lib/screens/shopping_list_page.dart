@@ -492,10 +492,24 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   void _shareList(ShoppingList list) {
-    final itemsText = list.items.isEmpty
-        ? 'Nenhum item na lista.'
-        : list.items.map((item) => '- ${item.name} (${item.quantity})').join('\n');
-    final text = 'Lista "${list.name}":\n$itemsText';
-    Share.share(text);
+    final buffer = StringBuffer();
+  buffer.writeln('🛒 Lista: ${list.name}');
+  if (list.budget > 0) {
+    buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
   }
+  buffer.writeln('Itens:');
+  if (list.items.isEmpty) {
+    buffer.writeln('- Nenhum item na lista.');
+  } else {
+    for (final item in list.items) {
+      final status = item.purchased == true ? '✅' : '⬜️';
+      buffer.writeln('$status ${item.name} (${item.quantity})');
+    }
+  }
+  // Se quiser, adicione um link para o app:
+  // buffer.writeln('\nBaixe o app: https://seulink.com');
+
+  Share.share(buffer.toString());
+}
+
 }
