@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../core/constants/strings.dart';
 import '../core/constants/dimensions.dart';
 import '../core/utils/formatters.dart';
@@ -124,6 +125,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               _showSearch = !_showSearch;
             });
           },
+        ),
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Compartilhar lista',
+          onPressed: () => _shareList(widget.list),
         ),
       ],
       bottom: PreferredSize(
@@ -484,4 +490,26 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       ),
     );
   }
+
+  void _shareList(ShoppingList list) {
+    final buffer = StringBuffer();
+  buffer.writeln('🛒 Lista: ${list.name}');
+  if (list.budget > 0) {
+    buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
+  }
+  buffer.writeln('Itens:');
+  if (list.items.isEmpty) {
+    buffer.writeln('- Nenhum item na lista.');
+  } else {
+    for (final item in list.items) {
+      final status = item.purchased == true ? '✅' : '⬜️';
+      buffer.writeln('$status ${item.name} (${item.quantity})');
+    }
+  }
+  // Se quiser, adicione um link para o app:
+  // buffer.writeln('\nBaixe o app: https://seulink.com');
+
+  Share.share(buffer.toString());
+}
+
 }
