@@ -98,14 +98,15 @@ class ListsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void togglePurchased(GroceryItem item) {
+  void togglePurchased(ShoppingList list, GroceryItem item) {
     item.purchased = !item.purchased;
-    item.save();
+    list.save(); // salva a lista inteira
     notifyListeners();
   }
 
-  void remove(GroceryItem item) {
-    item.delete();
+  void remove(ShoppingList list, GroceryItem item) {
+    list.items.remove(item);
+    list.save();
     notifyListeners();
   }
 
@@ -199,6 +200,14 @@ class ListsProvider extends ChangeNotifier {
       return ascending ? an.compareTo(bn) : bn.compareTo(an);
     });
     list.save();
+    notifyListeners();
+  }
+
+  double getListBudget(ShoppingList list) => list.budget;
+
+  void updateListBudget(ShoppingList list, double value) {
+    list.budget = value;
+    list.save(); // persiste no Hive
     notifyListeners();
   }
 }

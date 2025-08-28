@@ -33,7 +33,7 @@ class AppTheme {
           ),
         ),
         iconTheme: const IconThemeData(
-          color: Color.fromARGB(225, 255, 255, 255),
+          color: AppColors.textPrimary, // Agora ícones escuros no tema claro
           size: Dimensions.iconL,
         ),
         inputDecorationTheme: InputDecorationTheme(

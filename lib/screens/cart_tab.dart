@@ -23,7 +23,7 @@ class CartPage extends StatelessWidget {
       builder: (_, provider, __) {
         final cart = provider.getCartItems(list);
         final totalGasto = provider.getListPurchasedTotal(list);
-        final budget = provider.getBudget();
+        final budget = provider.getListBudget(list);
         final remaining = budget - totalGasto;
 
         return Scaffold(
@@ -158,8 +158,7 @@ class CartPage extends StatelessWidget {
             icon: Icons.delete,
             alignment: Alignment.centerRight,
           ),
-          confirmDismiss: (direction) =>
-              _handleDismiss(direction, item, provider),
+          confirmDismiss: (direction) => _handleDismiss(direction, item, provider, list),
           child: ShoppingItemCard(
             item: item,
             onEdit: () => _showEditItemDialog(context, provider, item),
@@ -215,12 +214,13 @@ class CartPage extends StatelessWidget {
     DismissDirection direction,
     GroceryItem item,
     ListsProvider provider,
+    ShoppingList list,
   ) async {
     if (direction == DismissDirection.startToEnd) {
-      provider.togglePurchased(item);
+      provider.toggleItemPurchased(list, item); // usar toggleItemPurchased
       return false;
     } else if (direction == DismissDirection.endToStart) {
-      provider.remove(item);
+      provider.removeItemFromList(list, item); // remover do Hive
       return true;
     }
     return false;
@@ -340,8 +340,8 @@ class CartPage extends StatelessWidget {
 
   void _showBudgetDialog(BuildContext context, ListsProvider provider) {
     final ctrl = TextEditingController(
-      text: Formatters.currency(provider.getBudget()),
-    );
+    text: Formatters.currency(provider.getListBudget(list)),
+  );
 
     showDialog(
       context: context,
@@ -352,14 +352,10 @@ class CartPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(Strings.btnCancel),
-          ),
-          TextButton(
             onPressed: () {
               final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
               final value = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              provider.updateBudget(value);
+              provider.updateListBudget(list, value);
               Navigator.of(context).pop();
             },
             child: const Text(Strings.btnSave),

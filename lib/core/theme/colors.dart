@@ -18,7 +18,7 @@ class AppColors {
   static const info = Color(0xFF2196F3);
 
   // Cores de texto
-  static const textPrimary = Colors.black87;
+  static const Color textPrimary = Colors.black87;
   static const textSecondary = Colors.black54;
   static const textLight = Colors.white;
   static const textLightSecondary = Colors.white70;

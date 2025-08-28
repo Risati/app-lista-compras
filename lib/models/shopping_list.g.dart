@@ -19,15 +19,16 @@ class ShoppingListAdapter extends TypeAdapter<ShoppingList> {
     return ShoppingList(
       name: fields[0] as String,
       items: (fields[1] as List).cast<GroceryItem>(),
-      isCompleted: fields[2] == null ? false : fields[2] as bool,
+      isCompleted: fields[2] as bool,
       completedAt: fields[3] as DateTime?,
+      budget: fields[4] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, ShoppingList obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class ShoppingListAdapter extends TypeAdapter<ShoppingList> {
       ..writeByte(2)
       ..write(obj.isCompleted)
       ..writeByte(3)
-      ..write(obj.completedAt);
+      ..write(obj.completedAt)
+      ..writeByte(4)
+      ..write(obj.budget);
   }
 
   @override
