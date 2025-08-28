@@ -412,62 +412,128 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
   }
 
-  void _showEditItemDialog(
-      BuildContext context, ListsProvider provider, GroceryItem item) {
-    final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final priceCtrl =
-        TextEditingController(text: Formatters.currency(item.price));
+  Future<void> _showEditItemDialog(BuildContext context, ListsProvider provider, GroceryItem item) async {
+    final TextEditingController qtyCtrl = TextEditingController(text: item.quantity.toString());
+    final TextEditingController priceCtrl = TextEditingController(text: item.price.toStringAsFixed(2));
+    String categoriaAtual = await CategoryService.getCategoria(item.name);
+    final categorias = CategoryService.categoriaCores.keys.toList();
 
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text(Strings.dialogEditItem),
-        content: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: Dimensions.paddingS,
-              horizontal: Dimensions.paddingXS,
-            ),
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: const [
+              Icon(Icons.edit, color: Colors.deepPurple),
+              SizedBox(width: 8),
+              Text(
+                'Editar item',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Quantidade
                 TextField(
                   controller: qtyCtrl,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: Strings.labelQuantity,
-                    isDense: true,
+                  decoration: InputDecoration(
+                    labelText: 'Quantidade',
+                    prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: Dimensions.paddingM),
-                CurrencyField(
+                const SizedBox(height: 16),
+
+                // Valor
+                TextField(
                   controller: priceCtrl,
-                  labelText: Strings.labelPrice,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'Valor (R\$)',
+                    prefixIcon: const Icon(Icons.attach_money),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Categoria
+                DropdownButtonFormField<String>(
+                  value: categoriaAtual,
+                  items: categorias.map((cat) {
+                    final cor = CategoryService.getCorCategoria(cat);
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: cor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(cat),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) categoriaAtual = value;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Categoria',
+                    prefixIcon: const Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(Strings.btnCancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final quantity = int.tryParse(qtyCtrl.text) ?? item.quantity;
-              final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final price = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              provider.updateItem(widget.list, item,
-                  quantity: quantity, price: price);
-              Navigator.of(context).pop();
-            },
-            child: const Text(Strings.btnSave),
-          ),
-        ],
-      ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+              label: const Text('Cancelar'),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                final int? qtd = int.tryParse(qtyCtrl.text);
+                final double? valor = double.tryParse(priceCtrl.text.replaceAll(',', '.'));
+                if (qtd != null && valor != null) {
+                  provider.updateItem(widget.list, item, quantity: qtd, price: valor);
+                  await CategoryService.salvarCategoria(item.name, categoriaAtual);
+                  Navigator.pop(context);
+                }
+              },
+              icon: const Icon(Icons.save),
+              label: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
     );
+
   }
 
   void _showEditNameDialog(

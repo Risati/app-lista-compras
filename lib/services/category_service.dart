@@ -169,10 +169,14 @@ class CategoryService {
     }
   }
 
-  // 2. Busca no Hive (aprendizado do usuário)
-  final savedCategoria = box.get(lowerProduto);
-  if (savedCategoria != null && savedCategoria is String) {
-    return savedCategoria;
+  // 2. Busca no Hive (aprendizado do usuário) por aproximação
+  for (final key in box.keys) {
+    if (key is String && key.contains(lowerProduto)) {
+      final savedCategoria = box.get(key);
+      if (savedCategoria != null && savedCategoria is String) {
+        return savedCategoria;
+      }
+    }
   }
 
   // 3. Fallback -> Outros

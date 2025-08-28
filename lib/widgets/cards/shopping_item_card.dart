@@ -47,7 +47,7 @@ class ShoppingItemCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start, // Permite quebra
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Qtd: ${Formatters.quantity(item.quantity)}',
@@ -98,7 +98,7 @@ class ShoppingItemCard extends StatelessWidget {
           alignment: WrapAlignment.center,
           children: [
             IconButton(
-              iconSize: 20, // menor
+              iconSize: 20,
               icon: Icon(
                 item.isFavorite ? Icons.star : Icons.star_border,
                 color: item.isFavorite
@@ -108,13 +108,13 @@ class ShoppingItemCard extends StatelessWidget {
               onPressed: onFavorite,
             ),
             IconButton(
-              iconSize: 20, // menor
+              iconSize: 20,
               icon: Icon(
                 Icons.edit,
                 size: 20,
                 color: Theme.of(context).iconTheme.color,
               ),
-              onPressed: onEdit,
+              onPressed: onEdit, // Aqui deve abrir o diálogo de edição completo
             ),
           ],
         ),
