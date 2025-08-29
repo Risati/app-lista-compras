@@ -12,6 +12,7 @@ import '../models/grocery_item.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../core/theme/text_styles.dart';
 import '../widgets/inputs/currency_field.dart';
+import '../services/category_service.dart';
 
 
 class CartPage extends StatelessWidget {
@@ -160,11 +161,20 @@ class CartPage extends StatelessWidget {
             alignment: Alignment.centerRight,
           ),
           confirmDismiss: (direction) => _handleDismiss(direction, item, provider, list),
-          child: ShoppingItemCard(
-            item: item,
-            onEdit: () => _showEditItemDialog(context, provider, item),
-            onEditName: () => _showEditNameDialog(context, provider, item),
-            onFavorite: () => provider.toggleFavorite(item),
+          child: FutureBuilder<String>(
+            future: CategoryService.getCategoria(item.name),
+            builder: (context, snapshot) {
+              final categoria = snapshot.data ?? 'Outros';
+              final cor = CategoryService.getCorCategoria(categoria);
+              return ShoppingItemCard(
+                item: item,
+                categoria: categoria,
+                corCategoria: cor,
+                onEdit: () => _showEditItemDialog(context, provider, item),
+                onEditName: () => _showEditNameDialog(context, provider, item),
+                onFavorite: () => provider.toggleFavorite(item),
+              );
+            },
           ),
         );
       },

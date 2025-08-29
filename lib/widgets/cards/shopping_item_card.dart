@@ -6,17 +6,21 @@ import '../../models/grocery_item.dart';
 
 class ShoppingItemCard extends StatelessWidget {
   final GroceryItem item;
-  final VoidCallback onEdit;
-  final VoidCallback onEditName;
-  final VoidCallback onFavorite;
+  final String categoria;
+  final Color corCategoria;
+  final VoidCallback? onEdit;
+  final VoidCallback? onEditName;
+  final VoidCallback? onFavorite;
 
   const ShoppingItemCard({
-    super.key,
+    Key? key,
     required this.item,
-    required this.onEdit,
-    required this.onEditName,
-    required this.onFavorite,
-  });
+    required this.categoria,
+    required this.corCategoria,
+    this.onEdit,
+    this.onEditName,
+    this.onFavorite,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class ShoppingItemCard extends StatelessWidget {
       child: ListTile(
         visualDensity: const VisualDensity(vertical: -4),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: Dimensions.paddingM,
+          horizontal: Dimensions.paddingS, // Reduzido
           vertical: Dimensions.paddingXS,
         ),
         tileColor: Theme.of(context).colorScheme.surface,
@@ -38,28 +42,62 @@ class ShoppingItemCard extends StatelessWidget {
             style: AppTextStyles.bodyLarge(context),
           ),
         ),
-        subtitle: Wrap(
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Qtd: ${Formatters.quantity(item.quantity)}',
-              style: AppTextStyles.bodyMedium(context),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Qtd: ${Formatters.quantity(item.quantity)}',
+                  style: AppTextStyles.bodyMedium(context),
+                ),
+                const SizedBox(width: Dimensions.paddingM),
+                Text(
+                  Formatters.currency(item.price),
+                  style: AppTextStyles.bodyMedium(context),
+                ),
+                const SizedBox(width: Dimensions.paddingM),
+                Text(
+                  'Total: ${Formatters.currency(item.quantity * item.price)}',
+                  style: AppTextStyles.price(context),
+                ),
+              ],
             ),
-            const SizedBox(width: Dimensions.paddingM),
-            Text(
-              Formatters.currency(item.price),
-              style: AppTextStyles.bodyMedium(context),
-            ),
-            const SizedBox(width: Dimensions.paddingM),
-            Text(
-              'Total: ${Formatters.currency(item.quantity * item.price)}',
-              style: AppTextStyles.price(context),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: corCategoria,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    categoria,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: corCategoria,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        trailing: Wrap(
+          spacing: 0,
+          alignment: WrapAlignment.center,
           children: [
             IconButton(
+              iconSize: 20,
               icon: Icon(
                 item.isFavorite ? Icons.star : Icons.star_border,
                 color: item.isFavorite
@@ -69,12 +107,13 @@ class ShoppingItemCard extends StatelessWidget {
               onPressed: onFavorite,
             ),
             IconButton(
+              iconSize: 20,
               icon: Icon(
                 Icons.edit,
-                size: Dimensions.iconM,
+                size: 20,
                 color: Theme.of(context).iconTheme.color,
               ),
-              onPressed: onEdit,
+              onPressed: onEdit, // Aqui deve abrir o diálogo de edição completo
             ),
           ],
         ),

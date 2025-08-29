@@ -17,6 +17,7 @@ import '../widgets/dialogs/confirm_dialog.dart';
 import 'barcode_scanner_page.dart';
 import '../core/theme/text_styles.dart';
 import '../core/theme/colors.dart';
+import '../services/category_service.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final ShoppingList list;
@@ -280,11 +281,20 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           ),
           confirmDismiss: (direction) =>
               _handleDismiss(direction, item, provider),
-          child: ShoppingItemCard(
-            item: item,
-            onEdit: () => _showEditItemDialog(context, provider, item),
-            onEditName: () => _showEditNameDialog(context, provider, item),
-            onFavorite: () => provider.toggleFavorite(item),
+          child: FutureBuilder<String>(
+            future: CategoryService.getCategoria(item.name),
+            builder: (context, snapshot) {
+              final categoria = snapshot.data ?? 'Outros';
+              final cor = CategoryService.getCorCategoria(categoria);
+              return ShoppingItemCard(
+                item: item,
+                categoria: categoria,
+                corCategoria: cor,
+                onEdit: () => _showEditItemDialog(context, provider, item),
+                onEditName: () => _showEditNameDialog(context, provider, item),
+                onFavorite: () => provider.toggleFavorite(item),
+              );
+            },
           ),
         );
       },
@@ -402,62 +412,142 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
   }
 
-  void _showEditItemDialog(
-      BuildContext context, ListsProvider provider, GroceryItem item) {
-    final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final priceCtrl =
-        TextEditingController(text: Formatters.currency(item.price));
+  Future<void> _showEditItemDialog(BuildContext context, ListsProvider provider, GroceryItem item) async {
+    final TextEditingController qtyCtrl = TextEditingController(text: item.quantity.toString());
+    final TextEditingController priceCtrl = TextEditingController(text: item.price.toStringAsFixed(2));
+    String categoriaAtual = await CategoryService.getCategoria(item.name);
+    final categorias = CategoryService.categoriaCores.keys.toList();
 
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text(Strings.dialogEditItem),
-        content: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: Dimensions.paddingS,
-              horizontal: Dimensions.paddingXS,
-            ),
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: Colors.deepPurple),
+              SizedBox(width: 8),
+              Text(
+                'Editar item',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Quantidade
                 TextField(
                   controller: qtyCtrl,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: Strings.labelQuantity,
-                    isDense: true,
+                  decoration: InputDecoration(
+                    labelText: 'Quantidade',
+                    prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: Dimensions.paddingM),
+                const SizedBox(height: 16),
+
+                // Valor usando CurrencyField
                 CurrencyField(
                   controller: priceCtrl,
-                  labelText: Strings.labelPrice,
+                  labelText: 'Valor (R\$)',
+                  onChanged: (valor) {
+                    // opcional: ação em tempo real
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Categoria
+                DropdownButtonFormField<String>(
+                  value: categoriaAtual,
+                  items: categorias.map((cat) {
+                    final cor = CategoryService.getCorCategoria(cat);
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: cor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(cat),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) categoriaAtual = value;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Categoria',
+                    prefixIcon: const Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(Strings.btnCancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final quantity = int.tryParse(qtyCtrl.text) ?? item.quantity;
-              final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final price = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
-              provider.updateItem(widget.list, item,
-                  quantity: quantity, price: price);
-              Navigator.of(context).pop();
-            },
-            child: const Text(Strings.btnSave),
-          ),
-        ],
-      ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.deepPurple, // Cor do texto e ícone
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+              label: const Text('Cancelar'),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple, // Cor de fundo
+                foregroundColor: Colors.white, // Cor do ícone e texto
+                elevation: 4,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () async {
+                final int? qtd = int.tryParse(qtyCtrl.text);
+                final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+                final double valor = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+
+                if (qtd != null) {
+                  provider.updateItem(
+                    widget.list,
+                    item,
+                    quantity: qtd,
+                    price: valor,
+                  );
+                  await CategoryService.salvarCategoria(item.name, categoriaAtual);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              icon: const Icon(Icons.save),
+              label: const Text('Salvar'),
+            ),
+          ],
+
+        );
+      },
     );
+
+
   }
 
   void _showEditNameDialog(
@@ -493,23 +583,22 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
   void _shareList(ShoppingList list) {
     final buffer = StringBuffer();
-  buffer.writeln('🛒 Lista: ${list.name}');
-  if (list.budget > 0) {
-    buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
-  }
-  buffer.writeln('Itens:');
-  if (list.items.isEmpty) {
-    buffer.writeln('- Nenhum item na lista.');
-  } else {
-    for (final item in list.items) {
-      final status = item.purchased == true ? '✅' : '⬜️';
-      buffer.writeln('$status ${item.name} (${item.quantity})');
+    buffer.writeln('🛒 Lista: ${list.name}');
+    if (list.budget > 0) {
+      buffer.writeln('Orçamento: R\$ ${list.budget.toStringAsFixed(2)}');
     }
+    buffer.writeln('Itens:');
+    if (list.items.isEmpty) {
+      buffer.writeln('- Nenhum item na lista.');
+    } else {
+      for (final item in list.items) {
+        final status = item.purchased == true ? '✅' : '⬜️';
+        buffer.writeln('$status ${item.name} (${item.quantity})');
+      }
+    }
+    // Adicionar um link para o app futuramente:
+    // buffer.writeln('\nBaixe o app: https://seulink.com');
+    Share.share(buffer.toString());
   }
-  // Se quiser, adicione um link para o app:
-  // buffer.writeln('\nBaixe o app: https://seulink.com');
-
-  Share.share(buffer.toString());
-}
 
 }
