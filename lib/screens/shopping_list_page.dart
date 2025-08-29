@@ -423,8 +423,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.edit, color: Colors.deepPurple),
               SizedBox(width: 8),
               Text(
@@ -452,17 +452,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Valor
-                TextField(
+                // Valor usando CurrencyField
+                CurrencyField(
                   controller: priceCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Valor (R\$)',
-                    prefixIcon: const Icon(Icons.attach_money),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  labelText: 'Valor (R\$)',
+                  onChanged: (valor) {
+                    // opcional: ação em tempo real
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -506,33 +502,51 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.deepPurple, // Cor do texto e ícone
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.close),
               label: const Text('Cancelar'),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Colors.deepPurple, // Cor de fundo
+                foregroundColor: Colors.white, // Cor do ícone e texto
+                elevation: 4,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: () async {
                 final int? qtd = int.tryParse(qtyCtrl.text);
-                final double? valor = double.tryParse(priceCtrl.text.replaceAll(',', '.'));
-                if (qtd != null && valor != null) {
-                  provider.updateItem(widget.list, item, quantity: qtd, price: valor);
+                final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+                final double valor = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+
+                if (qtd != null) {
+                  provider.updateItem(
+                    widget.list,
+                    item,
+                    quantity: qtd,
+                    price: valor,
+                  );
                   await CategoryService.salvarCategoria(item.name, categoriaAtual);
-                  Navigator.pop(context);
+                  if (context.mounted) Navigator.pop(context);
                 }
               },
               icon: const Icon(Icons.save),
               label: const Text('Salvar'),
             ),
           ],
+
         );
       },
     );
+
 
   }
 

@@ -3,7 +3,6 @@ import '../../core/constants/dimensions.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/grocery_item.dart';
-import '../../services/category_service.dart';
 
 class ShoppingItemCard extends StatelessWidget {
   final GroceryItem item;
