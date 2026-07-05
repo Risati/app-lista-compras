@@ -73,11 +73,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   PreferredSizeWidget _buildAppBar(
-      BuildContext context,
-      ListsProvider provider,
-      bool isAscending,
-      double budget,
-      ) {
+    BuildContext context,
+    ListsProvider provider,
+    bool isAscending,
+    double budget,
+  ) {
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -147,7 +147,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   isAscending
                       ? Icons.sort_by_alpha
                       : Icons.sort_by_alpha_outlined,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
                 tooltip: Strings.tooltipSortList,
                 onPressed: () => provider.toggleListSort(widget.list),
@@ -164,10 +164,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   Widget _buildBudgetButton(
-      BuildContext context,
-      ListsProvider provider,
-      double budget,
-      ) {
+    BuildContext context,
+    ListsProvider provider,
+    double budget,
+  ) {
     return GestureDetector(
       onTap: () => _showBudgetDialog(context, provider),
       child: Container(
@@ -279,8 +279,16 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             icon: Icons.delete,
             alignment: Alignment.centerRight,
           ),
-          confirmDismiss: (direction) =>
-              _handleDismiss(direction, item, provider),
+          confirmDismiss: (direction) {
+            // se o teclado estiver visível, apenas remove o foco em vez de
+            // deixar o item ser deslizado. Isso evita que o gesto de
+            // fechar o teclado deslize acidentalmente o Dismissible.
+            if (MediaQuery.of(context).viewInsets.bottom > 0) {
+              FocusScope.of(context).unfocus();
+              return Future.value(false);
+            }
+            return _handleDismiss(direction, item, provider);
+          },
           child: FutureBuilder<String>(
             future: CategoryService.getCategoria(item.name),
             builder: (context, snapshot) {
@@ -322,10 +330,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   }
 
   Future<bool> _handleDismiss(
-      DismissDirection direction,
-      GroceryItem item,
-      ListsProvider provider,
-      ) async {
+    DismissDirection direction,
+    GroceryItem item,
+    ListsProvider provider,
+  ) async {
     if (direction == DismissDirection.startToEnd) {
       provider.toggleItemPurchased(widget.list, item);
       return false;
@@ -412,9 +420,12 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
   }
 
-  Future<void> _showEditItemDialog(BuildContext context, ListsProvider provider, GroceryItem item) async {
-    final TextEditingController qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final TextEditingController priceCtrl = TextEditingController(text: item.price.toStringAsFixed(2));
+  Future<void> _showEditItemDialog(
+      BuildContext context, ListsProvider provider, GroceryItem item) async {
+    final TextEditingController qtyCtrl =
+        TextEditingController(text: item.quantity.toString());
+    final TextEditingController priceCtrl =
+        TextEditingController(text: item.price.toStringAsFixed(2));
     String categoriaAtual = await CategoryService.getCategoria(item.name);
     final categorias = CategoryService.categoriaCores.keys.toList();
 
@@ -422,7 +433,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.edit, color: Colors.deepPurple),
@@ -464,7 +476,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
                 // Categoria
                 DropdownButtonFormField<String>(
-                  value: categoriaAtual,
+                  initialValue: categoriaAtual,
                   items: categorias.map((cat) {
                     final cor = CategoryService.getCorCategoria(cat);
                     return DropdownMenuItem(
@@ -504,7 +516,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             TextButton.icon(
               style: TextButton.styleFrom(
                 foregroundColor: Colors.deepPurple, // Cor do texto e ícone
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: () => Navigator.pop(context),
@@ -516,7 +529,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                 backgroundColor: Colors.deepPurple, // Cor de fundo
                 foregroundColor: Colors.white, // Cor do ícone e texto
                 elevation: 4,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -525,7 +539,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               onPressed: () async {
                 final int? qtd = int.tryParse(qtyCtrl.text);
                 final digits = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-                final double valor = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+                final double valor =
+                    digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
 
                 if (qtd != null) {
                   provider.updateItem(
@@ -534,7 +549,8 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     quantity: qtd,
                     price: valor,
                   );
-                  await CategoryService.salvarCategoria(item.name, categoriaAtual);
+                  await CategoryService.salvarCategoria(
+                      item.name, categoriaAtual);
                   if (context.mounted) Navigator.pop(context);
                 }
               },
@@ -542,12 +558,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               label: const Text('Salvar'),
             ),
           ],
-
         );
       },
     );
-
-
   }
 
   void _showEditNameDialog(
@@ -600,5 +613,4 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     // buffer.writeln('\nBaixe o app: https://seulink.com');
     Share.share(buffer.toString());
   }
-
 }

@@ -63,6 +63,12 @@ class FavoritesPage extends StatelessWidget {
             ),
 
             confirmDismiss: (direction) async {
+              // evita ações quando teclado aberto, apenas retira foco
+              if (MediaQuery.of(context).viewInsets.bottom > 0) {
+                FocusScope.of(context).unfocus();
+                return false;
+              }
+
               if (direction == DismissDirection.startToEnd) {
                 // Evita duplicados
                 final alreadyInList =

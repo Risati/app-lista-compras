@@ -27,19 +27,17 @@ class ListsMenuPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-      Text(
-        Strings.appName,
-        style: AppTextStyles.titleSmall(context).copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
-        )
-      ),
-      Text(
-        Strings.appSubtitle,
-        style: AppTextStyles.titleSmall(context).copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
-      ),
-    ],
+            Text(Strings.appName,
+                style: AppTextStyles.titleSmall(context).copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                )),
+            Text(
+              Strings.appSubtitle,
+              style: AppTextStyles.titleSmall(context).copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -122,7 +120,6 @@ class ListsMenuPage extends StatelessWidget {
           ],
         ),
       ),
-
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateOptions(context),
         icon: const Icon(Icons.add),
@@ -270,7 +267,8 @@ class ListsMenuPage extends StatelessWidget {
                     const Positioned(
                       right: -2,
                       bottom: -2,
-                      child: Icon(Icons.check_circle, size: 18, color: Colors.green),
+                      child: Icon(Icons.check_circle,
+                          size: 18, color: Colors.green),
                     ),
                 ],
               ),
@@ -279,8 +277,9 @@ class ListsMenuPage extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodyLarge(context).copyWith(
-                  decoration:
-                      isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                  decoration: isCompleted
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
                   color: isCompleted ? theme.hintColor : null,
                 ),
               ),
@@ -291,81 +290,87 @@ class ListsMenuPage extends StatelessWidget {
                   : null,
               // Trailing mais limpo: botão de relatório + menu flutuante
               trailing: Wrap(
-              spacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // Remove o botão de relatório daqui
+                spacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  // Remove o botão de relatório daqui
 
-                PopupMenuButton<String>(
-                  tooltip: 'Opções',
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  onSelected: (value) async {
-                    if (value == 'report') {
-                      await _generateReport(context, list);
-                    } else if (value == 'rename') {
-                      final newName = await _showRenameDialog(context, list.name);
-                      if (newName != null && newName.isNotEmpty) {
-                        await Provider.of<ListsProvider>(context, listen: false)
-                            .renameList(list, newName);
+                  PopupMenuButton<String>(
+                    tooltip: 'Opções',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) async {
+                      if (value == 'report') {
+                        await _generateReport(context, list);
+                      } else if (value == 'rename') {
+                        final newName =
+                            await _showRenameDialog(context, list.name);
+                        if (newName != null && newName.isNotEmpty) {
+                          await Provider.of<ListsProvider>(context,
+                                  listen: false)
+                              .renameList(list, newName);
+                        }
+                      } else if (value == 'delete') {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Excluir lista?'),
+                            content: Text(
+                                'Tem certeza que deseja excluir "${list.name}"?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancelar'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Excluir'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          if (!context.mounted) return;
+                          await Provider.of<ListsProvider>(context,
+                                  listen: false)
+                              .removeList(list);
+                        }
                       }
-                    } else if (value == 'delete') {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Excluir lista?'),
-                          content: Text('Tem certeza que deseja excluir "${list.name}"?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancelar'),
-                            ),
-                            FilledButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Excluir'),
-                            ),
-                          ],
+                    },
+                    itemBuilder: (context) => [
+                      if (isCompleted)
+                        const PopupMenuItem(
+                          value: 'report',
+                          child: ListTile(
+                            leading: Icon(Icons.assessment),
+                            title: Text('Relatório'),
+                          ),
                         ),
-                      );
-                      if (confirm == true) {
-                        if (!context.mounted) return;
-                        await Provider.of<ListsProvider>(context, listen: false)
-                            .removeList(list);
-                      }
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (isCompleted)
                       const PopupMenuItem(
-                        value: 'report',
+                        value: 'rename',
                         child: ListTile(
-                          leading: Icon(Icons.assessment),
-                          title: Text('Relatório'),
+                          leading: Icon(Icons.edit),
+                          title: Text('Renomear'),
                         ),
                       ),
-                    const PopupMenuItem(
-                      value: 'rename',
-                      child: ListTile(
-                        leading: Icon(Icons.edit),
-                        title: Text('Renomear'),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete_outline),
+                          title: Text('Excluir'),
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: ListTile(
-                        leading: Icon(Icons.delete_outline),
-                        title: Text('Excluir'),
-                      ),
-                    ),
-                  ],
-                  icon: const Icon(Icons.more_vert),
-                ),
+                    ],
+                    icon: const Icon(Icons.more_vert),
+                  ),
 
-                Icon(Icons.arrow_forward_ios,
-                    color: theme.colorScheme.primary, size: 18),
-              ],
-            ),
+                  Icon(Icons.arrow_forward_ios,
+                      color: theme.colorScheme.primary, size: 18),
+                ],
+              ),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -381,24 +386,61 @@ class ListsMenuPage extends StatelessWidget {
   }
 
   IconData _getIconForList(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('churrasco')) return Icons.outdoor_grill;
-    if (lower.contains('semanal') || lower.contains('semana')) return Icons.calendar_today;
-    if (lower.contains('padaria') || lower.contains('pão')) return Icons.bakery_dining;
-    if (lower.contains('frutas') || lower.contains('hortifruti')) return Icons.local_grocery_store;
-    if (lower.contains('bebida') || lower.contains('cerveja') || lower.contains('vinho')) return Icons.local_bar;
-    if (lower.contains('carnes') || lower.contains('açougue') || lower.contains('frango')) return Icons.set_meal;
-    if (lower.contains('limpeza') || lower.contains('produtos de limpeza')) return Icons.cleaning_services;
-    if (lower.contains('festa') || lower.contains('aniversário')) return Icons.celebration;
-    if (lower.contains('farmácia') || lower.contains('remédio')) return Icons.local_hospital;
-    if (lower.contains('lanche') || lower.contains('snack')) return Icons.fastfood;
-    if (lower.contains('café') || lower.contains('manhã')) return Icons.coffee;
-    if (lower.contains('vegano') || lower.contains('salada')) return Icons.eco;
-    if (lower.contains('peixe') || lower.contains('marisco')) return Icons.set_meal;
-    if (lower.contains('doces') || lower.contains('sobremesa')) return Icons.cake;
-    if (lower.contains('pet') || lower.contains('ração')) return Icons.pets;
-    return Icons.list_alt;
+  final lower = name.toLowerCase();
+
+  if (lower.contains('churrasco')) {
+    return Icons.outdoor_grill;
   }
+  if (lower.contains('semanal') || lower.contains('semana')) {
+    return Icons.calendar_today;
+  }
+  if (lower.contains('padaria') || lower.contains('pão')) {
+    return Icons.bakery_dining;
+  }
+  if (lower.contains('frutas') || lower.contains('hortifruti')) {
+    return Icons.local_grocery_store;
+  }
+  if (lower.contains('bebida') ||
+      lower.contains('cerveja') ||
+      lower.contains('vinho')) {
+    return Icons.local_bar;
+  }
+  if (lower.contains('carnes') ||
+      lower.contains('açougue') ||
+      lower.contains('frango')) {
+    return Icons.set_meal;
+  }
+  if (lower.contains('limpeza') || lower.contains('produtos de limpeza')) {
+    return Icons.cleaning_services;
+  }
+  if (lower.contains('festa') || lower.contains('aniversário')) {
+    return Icons.celebration;
+  }
+  if (lower.contains('farmácia') || lower.contains('remédio')) {
+    return Icons.local_hospital;
+  }
+  if (lower.contains('lanche') || lower.contains('snack')) {
+    return Icons.fastfood;
+  }
+  if (lower.contains('café') || lower.contains('manhã')) {
+    return Icons.coffee;
+  }
+  if (lower.contains('vegano') || lower.contains('salada')) {
+    return Icons.eco;
+  }
+  if (lower.contains('peixe') || lower.contains('marisco')) {
+    return Icons.set_meal;
+  }
+  if (lower.contains('doces') || lower.contains('sobremesa')) {
+    return Icons.cake;
+  }
+  if (lower.contains('pet') || lower.contains('ração')) {
+    return Icons.pets;
+  }
+
+  return Icons.list_alt;
+}
+
 }
 
 class _EmptyState extends StatelessWidget {
