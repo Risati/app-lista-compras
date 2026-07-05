@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../core/constants/dimensions.dart';
 import '../core/constants/strings.dart';
 import '../core/theme/colors.dart';
-import '../core/utils/formatters.dart';
-import '../models/shopping_list.dart';
-import '../providers/lists_provider.dart';
-import '../widgets/cards/shopping_item_card.dart';
-import '../widgets/dialogs/confirm_dialog.dart';
-import '../models/grocery_item.dart';
-import '../widgets/buttons/primary_button.dart';
 import '../core/theme/text_styles.dart';
-import '../widgets/inputs/currency_field.dart';
+import '../core/utils/formatters.dart';
+
+import '../models/grocery_item.dart';
+import '../models/shopping_list.dart';
+
+import '../providers/lists_provider.dart';
+
 import '../services/category_service.dart';
 
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/cards/shopping_item_card.dart';
+import '../widgets/dialogs/confirm_dialog.dart';
+import '../widgets/inputs/currency_field.dart';
 
 class CartPage extends StatelessWidget {
   final ShoppingList list;
+
   const CartPage({super.key, required this.list});
 
   @override
@@ -36,7 +41,12 @@ class CartPage extends StatelessWidget {
           body: Column(
             children: [
               _buildSummaryCard(
-                  context, provider, budget, totalGasto, remaining),
+                context,
+                provider,
+                budget,
+                totalGasto,
+                remaining,
+              ),
               Expanded(
                 child: cart.isEmpty
                     ? const Center(child: Text(Strings.msgEmptyCart))
@@ -81,7 +91,7 @@ class CartPage extends StatelessWidget {
                   Text(
                     Formatters.currency(budget),
                     style: AppTextStyles.bodyLarge(context)
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.normal),
+                        .copyWith(fontSize: 16),
                   ),
                 ],
               ),
@@ -119,7 +129,8 @@ class CartPage extends StatelessWidget {
                   Formatters.currency(remaining),
                   style: AppTextStyles.bodyLarge(context).copyWith(
                     fontSize: 16,
-                    color: remaining >= 0 ? AppColors.warning : AppColors.error,
+                    color:
+                        remaining >= 0 ? AppColors.warning : AppColors.error,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -139,7 +150,8 @@ class CartPage extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(Dimensions.paddingM),
       itemCount: cart.length + 1,
-      separatorBuilder: (_, __) => const SizedBox(height: Dimensions.paddingXS),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: Dimensions.paddingXS),
       itemBuilder: (_, i) {
         if (i == cart.length) {
           return !list.isCompleted
@@ -148,6 +160,7 @@ class CartPage extends StatelessWidget {
         }
 
         final item = cart[i];
+
         return Dismissible(
           key: ValueKey('${item.name}_${item.quantity}'),
           background: _buildDismissBackground(
@@ -160,12 +173,19 @@ class CartPage extends StatelessWidget {
             icon: Icons.delete,
             alignment: Alignment.centerRight,
           ),
-          confirmDismiss: (direction) => _handleDismiss(direction, item, provider, list),
+          confirmDismiss: (direction) {
+            if (MediaQuery.of(context).viewInsets.bottom > 0) {
+              FocusScope.of(context).unfocus();
+              return Future.value(false);
+            }
+            return _handleDismiss(direction, item, provider, list);
+          },
           child: FutureBuilder<String>(
             future: CategoryService.getCategoria(item.name),
             builder: (context, snapshot) {
               final categoria = snapshot.data ?? 'Outros';
               final cor = CategoryService.getCorCategoria(categoria);
+
               return ShoppingItemCard(
                 item: item,
                 categoria: categoria,
@@ -189,15 +209,17 @@ class CartPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(Dimensions.paddingL),
       child: SizedBox(
-          width: double.infinity,
-          child: PrimaryButton(
-            text: Strings.btnFinishList,
-            icon: Icons.check_circle_outline,
-            onPressed:
-                cart.isEmpty ? null : () => _finishList(context, provider),
-            backgroundColor: AppColors.success,
-            fullWidth: true,
-          )),
+        width: double.infinity,
+        child: PrimaryButton(
+          text: Strings.btnFinishList,
+          icon: Icons.check_circle_outline,
+          onPressed: cart.isEmpty
+              ? null
+              : () => _finishList(context, provider),
+          backgroundColor: AppColors.success,
+          fullWidth: true,
+        ),
+      ),
     );
   }
 
@@ -210,8 +232,12 @@ class CartPage extends StatelessWidget {
       color: color,
       alignment: alignment,
       padding: EdgeInsets.only(
-        left: alignment == Alignment.centerLeft ? Dimensions.paddingXL : 0,
-        right: alignment == Alignment.centerRight ? Dimensions.paddingXL : 0,
+        left: alignment == Alignment.centerLeft
+            ? Dimensions.paddingXL
+            : 0,
+        right: alignment == Alignment.centerRight
+            ? Dimensions.paddingXL
+            : 0,
       ),
       child: Icon(
         icon,
@@ -228,16 +254,20 @@ class CartPage extends StatelessWidget {
     ShoppingList list,
   ) async {
     if (direction == DismissDirection.startToEnd) {
-      provider.toggleItemPurchased(list, item); // usar toggleItemPurchased
+      provider.toggleItemPurchased(list, item);
       return false;
-    } else if (direction == DismissDirection.endToStart) {
-      provider.removeItemFromList(list, item); // remover do Hive
+    }
+
+    if (direction == DismissDirection.endToStart) {
+      provider.removeItemFromList(list, item);
       return true;
     }
+
     return false;
   }
 
-  Future<void> _finishList(BuildContext context, ListsProvider provider) async {
+  Future<void> _finishList(
+      BuildContext context, ListsProvider provider) async {
     final confirm = await ConfirmDialog.show(
       context: context,
       title: Strings.dialogFinishList,
@@ -249,9 +279,11 @@ class CartPage extends StatelessWidget {
 
     if (confirm == true) {
       provider.completeList(list);
+
       if (!context.mounted) return;
+
       Navigator.of(context).pop();
-      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(Strings.msgListCompleted),
@@ -268,9 +300,8 @@ class CartPage extends StatelessWidget {
     GroceryItem item,
   ) {
     final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final priceCtrl = TextEditingController(
-      text: Formatters.currency(item.price),
-    );
+    final priceCtrl =
+        TextEditingController(text: Formatters.currency(item.price));
 
     showDialog(
       context: context,
@@ -288,7 +319,8 @@ class CartPage extends StatelessWidget {
             const SizedBox(height: Dimensions.paddingM),
             TextField(
               controller: priceCtrl,
-              decoration: const InputDecoration(labelText: Strings.labelPrice),
+              decoration:
+                  const InputDecoration(labelText: Strings.labelPrice),
               keyboardType: TextInputType.number,
             ),
           ],
@@ -300,12 +332,22 @@ class CartPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final quantity = int.tryParse(qtyCtrl.text) ?? item.quantity;
+              final quantity =
+                  int.tryParse(qtyCtrl.text) ?? item.quantity;
+
               final price = double.tryParse(
-                    priceCtrl.text.replaceAll(RegExp(r'[^0-9,.]'), ''),
+                    priceCtrl.text
+                        .replaceAll(RegExp(r'[^0-9,.]'), ''),
                   ) ??
                   item.price;
-              provider.updateItem(list, item, quantity: quantity, price: price);
+
+              provider.updateItem(
+                list,
+                item,
+                quantity: quantity,
+                price: price,
+              );
+
               Navigator.pop(context);
             },
             child: const Text(Strings.btnSave),
@@ -321,13 +363,15 @@ class CartPage extends StatelessWidget {
     GroceryItem item,
   ) {
     final ctrl = TextEditingController(text: item.name);
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text(Strings.dialogEditName),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(labelText: Strings.labelName),
+          decoration:
+              const InputDecoration(labelText: Strings.labelName),
         ),
         actions: [
           TextButton(
@@ -337,9 +381,11 @@ class CartPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               final newName = ctrl.text.trim();
+
               if (newName.isNotEmpty) {
                 provider.updateItem(list, item, name: newName);
               }
+
               Navigator.pop(context);
             },
             child: const Text(Strings.btnSave),
@@ -349,24 +395,28 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  void _showBudgetDialog(BuildContext context, ListsProvider provider) {
+  void _showBudgetDialog(
+      BuildContext context, ListsProvider provider) {
     final ctrl = TextEditingController(
-    text: Formatters.currency(provider.getListBudget(list)),
-  );
+      text: Formatters.currency(provider.getListBudget(list)),
+    );
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text(Strings.dialogAdjustBudget),
-        content: CurrencyField(
-          controller: ctrl,
-        ),
+        content: CurrencyField(controller: ctrl),
         actions: [
           TextButton(
             onPressed: () {
-              final digits = ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
-              final value = digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+              final digits =
+                  ctrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+              final value =
+                  digits.isEmpty ? 0.0 : int.parse(digits) / 100.0;
+
               provider.updateListBudget(list, value);
+
               Navigator.of(context).pop();
             },
             child: const Text(Strings.btnSave),

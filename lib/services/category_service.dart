@@ -144,44 +144,45 @@ class CategoryService {
     'Grãos': Colors.brown,
     'Massas': Colors.orange,
     'Mercearia': Colors.amber,
-    'Laticínios': Colors.blue[200]!,
+    'Laticínios': Colors.blue,
     'Frios': Colors.blueGrey,
     'Carnes': Colors.red,
     'Limpeza': Colors.teal,
     'Higiene': Colors.purple,
-    'Padaria': Colors.yellow[700]!,
+    'Padaria': Colors.yellow,
     'Snacks': Colors.deepOrange,
     'Doces': Colors.pink,
     'Bebidas': Colors.lightBlue,
+    'Pets': Colors.green,
     'Outros': Colors.grey,
   };
 
   /// Obtém categoria de um produto (base → Hive → fallback)
   static Future<String> getCategoria(String produto) async {
-  final box = await Hive.openBox(boxName);
-  final lowerProduto = produto.toLowerCase();
+    final box = await Hive.openBox(boxName);
+    final lowerProduto = produto.toLowerCase();
 
-  // 1. Busca no dicionário base por palavra exata
-  final palavras = lowerProduto.split(RegExp(r'[\s,;.-]+'));
-  for (final palavra in palavras) {
-    if (baseCategorias.containsKey(palavra)) {
-      return baseCategorias[palavra]!;
-    }
-  }
-
-  // 2. Busca no Hive (aprendizado do usuário) por aproximação
-  for (final key in box.keys) {
-    if (key is String && key.contains(lowerProduto)) {
-      final savedCategoria = box.get(key);
-      if (savedCategoria != null && savedCategoria is String) {
-        return savedCategoria;
+    // 1. Busca no dicionário base por palavra exata
+    final palavras = lowerProduto.split(RegExp(r'[\s,;.-]+'));
+    for (final palavra in palavras) {
+      if (baseCategorias.containsKey(palavra)) {
+        return baseCategorias[palavra]!;
       }
     }
-  }
 
-  // 3. Fallback -> Outros
-  return 'Outros';
-}
+    // 2. Busca no Hive (aprendizado do usuário)
+    for (final key in box.keys) {
+      if (key is String && key.contains(lowerProduto)) {
+        final savedCategoria = box.get(key);
+        if (savedCategoria != null && savedCategoria is String) {
+          return savedCategoria;
+        }
+      }
+    }
+
+    // 3. Fallback -> Outros
+    return 'Outros';
+  }
 
   /// Salva categoria escolhida pelo usuário
   static Future<void> salvarCategoria(String produto, String categoria) async {
@@ -191,7 +192,8 @@ class CategoryService {
   }
 
   /// Edita categoria aprendida de um produto
-  static Future<void> editarCategoria(String produto, String novaCategoria) async {
+  static Future<void> editarCategoria(
+      String produto, String novaCategoria) async {
     await salvarCategoria(produto, novaCategoria);
   }
 
@@ -211,5 +213,31 @@ class CategoryService {
   static Future<Map<String, String>> getCategoriasAprendidas() async {
     final box = await Hive.openBox(boxName);
     return Map<String, String>.from(box.toMap());
+  }
+
+  /// Agrupa e ordena uma lista de produtos por categoria
+  static Future<Map<String, List<String>>> agruparPorCategoria(
+      List<String> produtos) async {
+    final Map<String, List<String>> mapaCategorias = {};
+
+    for (final produto in produtos) {
+      final categoria = await getCategoria(produto);
+
+      if (!mapaCategorias.containsKey(categoria)) {
+        mapaCategorias[categoria] = [];
+      }
+      mapaCategorias[categoria]!.add(produto);
+    }
+
+    // Ordenar categorias alfabeticamente
+    final categoriasOrdenadas = mapaCategorias.keys.toList()..sort();
+
+    // Criar novo mapa com ordem garantida
+    final Map<String, List<String>> resultadoOrdenado = {
+      for (final cat in categoriasOrdenadas)
+        cat: (mapaCategorias[cat]!..sort()) // ordena produtos dentro da categoria
+    };
+
+    return resultadoOrdenado;
   }
 }

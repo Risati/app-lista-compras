@@ -13,14 +13,14 @@ class ShoppingItemCard extends StatelessWidget {
   final VoidCallback? onFavorite;
 
   const ShoppingItemCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.categoria,
     required this.corCategoria,
     this.onEdit,
     this.onEditName,
     this.onFavorite,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
